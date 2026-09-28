@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>宿泊価格監視ダッシュボード | 最安値＆乗り換えチェッカー</title>
-  <!-- Tailwind CSS CDN -->
+  <title>宿泊価格監視システム | 最安プラン比較ダッシュボード</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -21,217 +19,426 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+    input[type="date"] {
+      appearance: none;
+      -webkit-appearance: none;
+    }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-20">
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen pb-16">
 
   <!-- Header -->
-  <header class="bg-indigo-900 text-white sticky top-0 z-30 shadow-md">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <span class="text-2xl">🏨</span>
+  <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-sm border-b border-slate-800">
+    <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-base shadow-sm">
+          <i class="fa-solid fa-hotel"></i>
+        </div>
         <div>
-          <h1 class="font-bold text-lg leading-tight">宿泊価格監視 Bot</h1>
-          <p class="text-xs text-indigo-200">楽天トラベル ＆ じゃらん公式 最安値比較</p>
+          <h1 class="font-bold text-base tracking-tight leading-tight">宿泊価格監視システム</h1>
+          <p class="text-[11px] text-slate-400">楽天トラベル ＆ じゃらん公式 最安プラン比較</p>
         </div>
       </div>
-      <div class="text-right flex items-center space-x-2">
-        <button onclick="loadData(true)" class="p-2 rounded-lg bg-indigo-800 hover:bg-indigo-700 text-indigo-100 transition active:scale-95 text-xs flex items-center space-x-1">
+      <div class="flex items-center space-x-2">
+        <button onclick="loadData(true)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition active:scale-95 text-xs flex items-center space-x-1.5 border border-slate-700">
           <i class="fa-solid fa-arrows-rotate"></i>
-          <span class="hidden sm:inline">更新</span>
+          <span>更新</span>
         </button>
       </div>
     </div>
 
-    <!-- Main Navigation Tabs -->
-    <div class="max-w-4xl mx-auto px-4 flex border-t border-indigo-800">
-      <button id="nav-btn-list" onclick="switchNav('list')" class="flex-1 py-3 text-center text-sm font-semibold border-b-2 border-amber-400 text-amber-300 flex items-center justify-center space-x-2">
-        <i class="fa-solid fa-bell"></i>
+    <!-- Navigation Tabs -->
+    <div class="max-w-3xl mx-auto px-4 flex border-t border-slate-800">
+      <button id="nav-btn-list" onclick="switchNav('list')" class="flex-1 py-2.5 text-center text-xs font-bold border-b-2 border-indigo-400 text-white flex items-center justify-center space-x-2 transition">
+        <i class="fa-solid fa-list-check"></i>
         <span>監視中一覧 (<span id="trip-count-badge">0</span>)</span>
       </button>
-      <button id="nav-btn-add" onclick="switchNav('add')" class="flex-1 py-3 text-center text-sm font-semibold border-b-2 border-transparent text-indigo-300 hover:text-white flex items-center justify-center space-x-2">
-        <i class="fa-solid fa-plus-circle"></i>
-        <span>出張・旅行を登録</span>
+      <button id="nav-btn-add" onclick="switchNav('add')" class="flex-1 py-2.5 text-center text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center justify-center space-x-2 transition">
+        <i class="fa-solid fa-plus" id="nav-add-icon"></i>
+        <span id="nav-add-text">新規出張の登録</span>
       </button>
     </div>
   </header>
 
   <!-- Main Container -->
-  <main class="max-w-4xl mx-auto px-4 py-5">
+  <main class="max-w-3xl mx-auto px-4 py-5">
 
-    <!-- TAB 1: 監視中一覧 -->
+    <!-- ========================================== -->
+    <!-- TAB 1: 監視中一覧                          -->
+    <!-- ========================================== -->
     <section id="section-list">
       
-      <!-- Last updated and Status bar -->
-      <div class="flex items-center justify-between text-xs text-slate-500 mb-3 px-1">
-        <span id="last-updated-text"><i class="fa-regular fa-clock mr-1"></i>読み込み中...</span>
-        <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium"><i class="fa-solid fa-robot mr-1"></i>毎日朝8時 自動更新</span>
+      <!-- Monitored Trips Horizontal Selector -->
+      <div class="mb-4">
+        <div class="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center justify-between">
+          <span>登録済みの出張・旅行</span>
+          <span id="last-updated-text" class="text-slate-400 font-normal"></span>
+        </div>
+        <div id="trip-pills-container" class="flex space-x-2 overflow-x-auto hide-scrollbar pb-1">
+          <!-- Dynamic Pills -->
+        </div>
       </div>
 
-      <!-- Monitored Trips Horizontal Scroll Pills -->
-      <div id="trip-pills-container" class="flex space-x-2 overflow-x-auto hide-scrollbar pb-2 mb-4">
-        <!-- Dynamic Trip Buttons -->
-      </div>
-
-      <!-- Active Trip Banner -->
-      <div id="trip-status-banner" class="mb-5 rounded-2xl p-4 shadow-sm border transition">
+      <!-- Active Trip Comparison Banner -->
+      <div id="trip-status-banner" class="mb-4 rounded-xl p-4 shadow-sm border transition">
         <!-- Injected via JS -->
       </div>
 
-      <!-- Trip Conditions Summary Tag Bar -->
-      <div id="trip-tags-bar" class="flex flex-wrap gap-2 mb-4 px-1 text-xs text-slate-600">
+      <!-- Trip Meta Information -->
+      <div id="trip-tags-bar" class="flex flex-wrap items-center gap-1.5 mb-4 text-xs text-slate-600 bg-white p-3 rounded-xl border border-slate-200">
         <!-- Injected via JS -->
       </div>
 
       <!-- Hotel Cards List -->
-      <div id="hotel-cards-container" class="space-y-4">
+      <div id="hotel-cards-container" class="space-y-3.5">
         <!-- Dynamic Hotel Cards -->
       </div>
 
       <!-- Empty State -->
-      <div id="empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 p-8">
-        <div class="text-5xl mb-3 text-slate-300">✈️</div>
-        <h3 class="text-base font-bold text-slate-700 mb-1">現在監視中の出張・旅行はありません</h3>
-        <p class="text-xs text-slate-500 mb-4">「出張・旅行を登録」タブから日程と行き先を登録してください。</p>
-        <button onclick="switchNav('add')" class="bg-indigo-600 text-white text-xs px-4 py-2.5 rounded-xl font-bold shadow hover:bg-indigo-700 transition">
-          <i class="fa-solid fa-plus mr-1"></i>出張を登録する
+      <div id="empty-state" class="hidden text-center py-16 bg-white rounded-xl border border-dashed border-slate-300 p-8">
+        <div class="text-4xl mb-3 text-slate-300"><i class="fa-regular fa-calendar-xmark"></i></div>
+        <h3 class="text-sm font-bold text-slate-700 mb-1">監視中の出張・旅行は登録されていません</h3>
+        <p class="text-xs text-slate-500 mb-4">「新規出張の登録」から出張予定を入力してください。</p>
+        <button onclick="switchNav('add')" class="bg-indigo-600 text-white text-xs px-4 py-2 rounded-lg font-bold shadow hover:bg-indigo-700 transition">
+          <i class="fa-solid fa-plus mr-1"></i>新規出張を登録する
         </button>
       </div>
 
     </section>
 
 
-    <!-- TAB 2: 新規出張登録フォーム -->
+    <!-- ========================================== -->
+    <!-- TAB 2: 新規登録・条件変更フォーム          -->
+    <!-- ========================================== -->
     <section id="section-add" class="hidden">
-      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-        <div class="flex items-center space-x-2 pb-3 mb-4 border-b border-slate-100">
-          <span class="text-xl text-indigo-600"><i class="fa-solid fa-plane-departure"></i></span>
-          <div>
-            <h2 class="font-bold text-slate-800 text-base">新しい出張・旅行を登録</h2>
-            <p class="text-xs text-slate-500">日付と行き先を入れるだけで即座に監視スタート</p>
-          </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+        
+        <div class="border-b border-slate-100 pb-3 mb-4">
+          <h2 id="form-title" class="font-bold text-slate-900 text-base">新規出張・旅行の登録</h2>
+          <p id="form-subtitle" class="text-xs text-slate-500 mt-0.5">日程と条件を設定すると、毎朝の最安値チェックと価格比較を開始します。</p>
         </div>
 
         <form id="add-trip-form" onsubmit="handleAddTrip(event)" class="space-y-4">
-          <!-- 宿泊日程 -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">
-              宿泊日程 <span class="text-rose-500 font-normal">※必須（まとめ打ち対応）</span>
-            </label>
-            <input type="text" id="input-date" required placeholder="例: 2026-10-15 または 10/15, 10/22, 11/05" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-            <p class="text-[11px] text-slate-400 mt-1">
-              💡 カンマで区切ると、複数日程を一度にまとめて登録できます。
-            </p>
-          </div>
-
-          <!-- 行き先 -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">
-              行き先（駅名・施設名） <span class="text-rose-500 font-normal">※必須</span>
-            </label>
-            <input type="text" id="input-dest" required placeholder="例: 東京駅、博多駅、幕張メッセ、梅田" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-            <p class="text-[11px] text-slate-400 mt-1">
-              💡 緯度経度は不要です。地名を入れるだけで自動測位されます。
-            </p>
-          </div>
-
-          <!-- 管理名 -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">
-              管理名 <span class="text-slate-400 font-normal">（空欄なら「東京出張」等で自動生成）</span>
-            </label>
-            <input type="text" id="input-name" placeholder="例: 開発合宿、秋の出張" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          </div>
-
-          <!-- 現在のキープ中価格 -->
-          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3">
-            <label class="block text-xs font-bold text-amber-900 mb-1 flex items-center justify-between">
-              <span>📌 現在キープ中の予約価格 (円)</span>
-              <span class="text-amber-700 font-normal">未予約なら空欄</span>
-            </label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-sm font-bold">¥</span>
-              <input type="number" id="input-booked-price" placeholder="例: 12000" class="w-full text-sm border border-amber-300 rounded-xl pl-8 pr-3 py-2.5 focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white">
+          <input type="hidden" id="input-trip-id" value="">
+          
+          <!-- 1. 基本情報 -->
+          <div class="space-y-3">
+            <div>
+              <label for="input-name" class="block text-xs font-bold text-slate-700 mb-1">
+                管理名 <span class="text-slate-400 font-normal">（例: 東京出張、大阪展示会、第3四半期視察）</span>
+              </label>
+              <input type="text" id="input-name" required placeholder="例: 10月 東京出張" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
             </div>
-            <p class="text-[11px] text-amber-800 mt-1">
-              ✨ ここに金額を入れると、それより安いプランが出現した時に<b>「乗り換えチャンス！」</b>と特大通知されます。
-            </p>
+
+            <div class="relative" id="dest-field-wrapper">
+              <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                <span>目的地 <span class="text-rose-500">*</span> <span class="text-slate-500 font-normal">（住所・店舗名・駅名・会場名）</span></span>
+                <span class="text-[11px] text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center space-x-1">
+                  <i class="fa-solid fa-location-crosshairs text-emerald-600"></i>
+                  <span>住所直接入力対応</span>
+                </span>
+              </label>
+              <div class="relative">
+                <input type="text" id="input-dest" required autocomplete="off"
+                       placeholder="例: 京都きもの友禅 名古屋店、カンダキラット 御徒町店、または住所直接入力" 
+                       class="w-full text-sm border border-slate-300 rounded-lg pl-3 pr-8 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white shadow-inner"
+                       oninput="handleDestInput(this.value)"
+                       onfocus="handleDestFocus(this.value)">
+                <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 pointer-events-none">
+                  <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+              </div>
+
+              <!-- 住所入力ガイドボックス -->
+              <div class="mt-1.5 p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-[11px] text-slate-600 space-y-1">
+                <div class="flex items-center text-emerald-800 font-bold text-xs">
+                  <i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>
+                  <span>訪問先の【住所】をそのまま貼り付けて入力できます</span>
+                </div>
+                <p class="leading-relaxed">
+                  郵便番号やビル名が入った住所（例: <code>愛知県名古屋市中区栄3-16-1</code>）でも、番地・市区町村を自動認識して最寄りの宿を正確に特定します。
+                </p>
+                <p class="text-slate-400 text-[10px]">
+                  ※店舗名・小売店名の場合は「店舗名＋住所」や「店舗名＋最寄り駅」で入力するとピンポイントに測位されます。
+                </p>
+              </div>
+
+              <!-- サジェスト候補ドロップダウン -->
+              <div id="dest-suggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto divide-y divide-slate-100">
+              </div>
+            </div>
           </div>
 
-          <!-- こだわり条件アコーディオン -->
-          <details class="group border border-slate-200 rounded-xl p-3 bg-slate-50 transition">
-            <summary class="text-xs font-bold text-slate-700 cursor-pointer flex items-center justify-between list-none">
-              <span>⚙️ こだわり条件（上限予算・徒歩分数・禁煙など）</span>
-              <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
-            </summary>
+          <!-- 2. 日程・宿泊数 -->
+          <div class="border-t border-slate-100 pt-3">
+            <h3 class="text-xs font-bold text-slate-800 mb-2.5 flex items-center">
+              <i class="fa-regular fa-calendar-days text-indigo-600 mr-1.5"></i>日程・宿泊数
+            </h3>
             
-            <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-200">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-[11px] font-bold text-slate-600 mb-1">1泊上限予算</label>
-                <input type="number" id="input-budget" value="16000" class="w-full text-xs border border-slate-300 rounded-lg p-2">
+                <label for="input-date" class="block text-xs font-medium text-slate-700 mb-1">
+                  チェックイン日 <span class="text-rose-500">*</span>
+                </label>
+                <input type="date" id="input-date" required class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
               </div>
+
               <div>
-                <label class="block text-[11px] font-bold text-slate-600 mb-1">許容徒歩分数</label>
-                <input type="number" id="input-walk" value="10" class="w-full text-xs border border-slate-300 rounded-lg p-2">
-              </div>
-              <div>
-                <label class="block text-[11px] font-bold text-slate-600 mb-1">喫煙・禁煙</label>
-                <select id="input-smoking" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
-                  <option value="禁煙" selected>🚭 禁煙ルーム</option>
-                  <option value="指定なし">指定なし</option>
-                  <option value="喫煙">🚬 喫煙ルーム</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-[11px] font-bold text-slate-600 mb-1">朝食</label>
-                <select id="input-breakfast" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
-                  <option value="指定なし" selected>指定なし</option>
-                  <option value="朝食あり">🍳 朝食あり</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-[11px] font-bold text-slate-600 mb-1">レビュー評価</label>
-                <select id="input-rate" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
-                  <option value="3.5">⭐ 3.5以上</option>
-                  <option value="4.0" selected>⭐ 4.0以上</option>
-                  <option value="4.5">⭐ 4.5以上</option>
-                  <option value="0.0">指定なし</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-[11px] font-bold text-slate-600 mb-1">泊数 / 人数</label>
-                <div class="flex space-x-1">
-                  <input type="number" id="input-nights" value="1" min="1" class="w-1/2 text-xs border border-slate-300 rounded-lg p-2" title="泊数">
-                  <input type="number" id="input-adults" value="1" min="1" class="w-1/2 text-xs border border-slate-300 rounded-lg p-2" title="人数">
+                <label for="input-nights" class="block text-xs font-medium text-slate-700 mb-1">
+                  宿泊数（泊数） <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                  <input type="number" id="input-nights" value="1" min="1" max="30" required class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="handleNightsChange()">
+                  <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-xs text-slate-400 pointer-events-none">泊</span>
                 </div>
               </div>
             </div>
-          </details>
+          </div>
 
-          <!-- Submit Button -->
-          <div class="pt-2">
-            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-md hover:from-indigo-700 hover:to-blue-700 transition active:scale-[0.99] flex items-center justify-center space-x-2 text-sm">
-              <i class="fa-solid fa-magnifying-glass"></i>
-              <span>登録して結果を表示する 🚀</span>
+          <!-- 3. 現在の予約状況（全泊分のキープ中総額） -->
+          <div class="border-t border-slate-100 pt-3">
+            <h3 class="text-xs font-bold text-slate-800 mb-2 flex items-center">
+              <i class="fa-solid fa-bookmark text-amber-600 mr-1.5"></i>現在の予約状況
+            </h3>
+            <div class="bg-amber-50/60 border border-amber-200/80 rounded-lg p-3">
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-medium text-slate-700">
+                  仮予約済みの総額（全泊分・税込） <span class="text-slate-400 font-normal">※未予約は空欄</span>
+                </label>
+                <span id="calc-booked-avg" class="text-[11px] font-bold text-amber-800"></span>
+              </div>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs font-bold">¥</span>
+                <input type="number" id="input-booked-price" placeholder="例: 12000 (2泊で24000なら総額を入力)" class="w-full text-sm border border-amber-300 rounded-lg pl-7 pr-3 py-2 focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white" oninput="updatePriceCalculations()">
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1">
+                ※1日目と2日目で料金が異なる場合も、予約票などに記載の「請求合計金額」をそのままご入力ください。
+              </p>
+            </div>
+          </div>
+
+          <!-- 4. こだわり条件（常に全表示） -->
+          <div class="border-t border-slate-100 pt-3">
+            <h3 class="text-xs font-bold text-slate-800 mb-2.5 flex items-center">
+              <i class="fa-solid fa-sliders text-indigo-600 mr-1.5"></i>こだわり条件
+            </h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-medium text-slate-700">1泊上限予算</label>
+                  <span id="calc-budget-total" class="text-[11px] text-slate-500"></span>
+                </div>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs font-bold">¥</span>
+                  <input type="number" id="input-budget" value="16000" class="w-full text-sm border border-slate-300 rounded-lg pl-7 pr-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="updatePriceCalculations()">
+                </div>
+              </div>
+
+              <div>
+                <label for="input-walk" class="block text-xs font-medium text-slate-700 mb-1">許容徒歩分数</label>
+                <select id="input-walk" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                  <option value="5">徒歩 5分以内</option>
+                  <option value="10" selected>徒歩 10分以内</option>
+                  <option value="15">徒歩 15分以内</option>
+                  <option value="20">徒歩 20分以内</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="input-smoking" class="block text-xs font-medium text-slate-700 mb-1">喫煙 / 禁煙</label>
+                <select id="input-smoking" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                  <option value="禁煙" selected>禁煙ルーム</option>
+                  <option value="指定なし">指定なし</option>
+                  <option value="喫煙">喫煙ルーム</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="input-breakfast" class="block text-xs font-medium text-slate-700 mb-1">朝食の有無</label>
+                <select id="input-breakfast" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                  <option value="指定なし" selected>指定なし</option>
+                  <option value="朝食あり">朝食あり</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="input-rate" class="block text-xs font-medium text-slate-700 mb-1">レビュー評価</label>
+                <select id="input-rate" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                  <option value="4.0" selected>★ 4.0以上（高評価）</option>
+                  <option value="3.5">★ 3.5以上（標準）</option>
+                  <option value="4.5">★ 4.5以上（最高評価）</option>
+                  <option value="0.0">指定なし</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="input-adults" class="block text-xs font-medium text-slate-700 mb-1">宿泊人数</label>
+                <div class="relative">
+                  <input type="number" id="input-adults" value="1" min="1" max="10" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                  <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-xs text-slate-400 pointer-events-none">名</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button & Cancel Button -->
+          <div class="pt-3 border-t border-slate-100 flex items-center space-x-2">
+            <button type="button" id="btn-cancel-edit" onclick="cancelEdit()" class="hidden px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs transition">
+              キャンセル
+            </button>
+            <button type="submit" id="btn-submit-form" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition active:scale-[0.99] flex items-center justify-center space-x-2 text-xs">
+              <i class="fa-solid fa-check" id="btn-submit-icon"></i>
+              <span id="btn-submit-text">登録して価格監視を開始する</span>
             </button>
           </div>
         </form>
+
       </div>
     </section>
 
   </main>
 
   <!-- Toast Notification -->
-  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none flex items-center space-x-2">
-    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none flex items-center space-x-2 border border-slate-700">
+    <i class="fa-solid fa-check text-emerald-400"></i>
     <span id="toast-message">メッセージ</span>
   </div>
 
   <script>
-    let appData = { generated_at: "", trips: [] };
+    const DEFAULT_DATA = {
+      "generated_at": new Date().toISOString().replace("T", " ").slice(0, 19),
+      "trips": [
+        {
+          "id": "trip-tokyo-demo",
+          "management_name": "東京出張",
+          "checkin_date": "2026-10-15",
+          "stay_nights": 1,
+          "adult_num": 1,
+          "destination": "東京駅",
+          "booked_price": 12000,
+          "has_cheaper_option": true,
+          "max_saved_amount": 3100,
+          "cheaper_count": 3,
+          "total_matched": 5,
+          "filters": {
+            "smoking": "禁煙",
+            "breakfast": "指定なし",
+            "max_walk": 10,
+            "min_review": 3.8,
+            "budget_max": 16000
+          },
+          "hotels": [
+            {
+              "hotel_id": "demo_3",
+              "hotel_name": "アパホテル＆リゾート東京駅前",
+              "price": 8900,
+              "walk_minutes": 3,
+              "review_rate": 4.0,
+              "agent": "楽天トラベル",
+              "plan_name": "【素泊まり】駅チカ直結プラン・大浴場無料利用",
+              "image_url": "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=500&q=80",
+              "url": "https://travel.rakuten.co.jp/",
+              "tags": ["徒歩3分", "大浴場あり", "禁煙"],
+              "rank": 1,
+              "cheaper_than_booked": true,
+              "saved_amount": 3100
+            },
+            {
+              "hotel_id": "demo_1",
+              "hotel_name": "スーパーホテルPremier東京駅八重洲中央口",
+              "price": 9500,
+              "walk_minutes": 4,
+              "review_rate": 4.3,
+              "agent": "楽天トラベル",
+              "plan_name": "【公式限定】天然温泉付スマートSTAY（禁煙）",
+              "image_url": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=500&q=80",
+              "url": "https://travel.rakuten.co.jp/",
+              "tags": ["徒歩4分", "天然温泉", "禁煙"],
+              "rank": 2,
+              "cheaper_than_booked": true,
+              "saved_amount": 2500
+            },
+            {
+              "hotel_id": "demo_2",
+              "hotel_name": "京王プレッソイン東京駅中央通り",
+              "price": 10800,
+              "walk_minutes": 6,
+              "review_rate": 4.1,
+              "agent": "じゃらん",
+              "plan_name": "シンプルステイ・無料軽朝食サービス（禁煙シングル）",
+              "image_url": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=500&q=80",
+              "url": "https://www.jalan.net/",
+              "tags": ["徒歩6分", "軽朝食付き", "禁煙"],
+              "rank": 3,
+              "cheaper_than_booked": true,
+              "saved_amount": 1200
+            }
+          ]
+        },
+        {
+          "id": "trip-hakata-demo",
+          "management_name": "博多旅行",
+          "checkin_date": "2026-11-20",
+          "stay_nights": 1,
+          "adult_num": 1,
+          "destination": "博多駅",
+          "booked_price": null,
+          "has_cheaper_option": false,
+          "max_saved_amount": 0,
+          "cheaper_count": 0,
+          "total_matched": 5,
+          "filters": {
+            "smoking": "禁煙",
+            "breakfast": "朝食あり",
+            "max_walk": 8,
+            "min_review": 4.0,
+            "budget_max": 14000
+          },
+          "hotels": [
+            {
+              "hotel_id": "demo_h1",
+              "hotel_name": "ダイワロイネットホテル博多駅前",
+              "price": 10500,
+              "walk_minutes": 4,
+              "review_rate": 4.2,
+              "agent": "楽天トラベル",
+              "plan_name": "博多名物和洋朝食ビュッフェ付 スタンダードシングル",
+              "image_url": "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=500&q=80",
+              "url": "https://travel.rakuten.co.jp/",
+              "tags": ["徒歩4分", "朝食付き", "禁煙"],
+              "rank": 1,
+              "cheaper_than_booked": false,
+              "saved_amount": 0
+            },
+            {
+              "hotel_id": "demo_h2",
+              "hotel_name": "三井ガーデンホテル福岡祇園",
+              "price": 12800,
+              "walk_minutes": 7,
+              "review_rate": 4.4,
+              "agent": "じゃらん",
+              "plan_name": "最上階大浴場＆郷土料理ビュッフェ朝食付き",
+              "image_url": "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=500&q=80",
+              "url": "https://www.jalan.net/",
+              "tags": ["徒歩7分", "最上階大浴場", "朝食付き"],
+              "rank": 2,
+              "cheaper_than_booked": false,
+              "saved_amount": 0
+            }
+          ]
+        }
+      ]
+    };
+
+    let appData = DEFAULT_DATA;
     let currentTripIndex = 0;
 
-    // Load initial data
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
     async function loadData(force = false) {
       try {
         const res = await fetch("data.json?t=" + Date.now());
@@ -239,23 +446,25 @@
           appData = await res.json();
         }
       } catch (e) {
-        console.warn("data.json not found, using localStorage or default", e);
+        console.log("Local preview mode: Using embedded data", e);
       }
 
-      // Merge local storage user trips
-      const localTrips = JSON.parse(localStorage.getItem("user_custom_trips") || "[]");
+      let localTrips = [];
+      try { localTrips = JSON.parse(localStorage.getItem("user_custom_trips") || "[]"); } catch(e) { console.warn("localStorage parse error", e); }
       if (localTrips.length > 0) {
-        // Prepend user trips
-        appData.trips = [...localTrips, ...appData.trips.filter(t => !localTrips.some(lt => lt.id === t.id))];
+        const localMap = new Map(localTrips.map(t => [t.id, t]));
+        // Replace or prepend
+        const existingRemaining = appData.trips.filter(t => !localMap.has(t.id));
+        appData.trips = [...localTrips, ...existingRemaining];
       }
 
       renderDashboard();
-      if (force) showToast("最新データを更新しました");
+      if (force) showToast("データを更新しました");
     }
 
     function renderDashboard() {
       document.getElementById("trip-count-badge").innerText = appData.trips.length;
-      document.getElementById("last-updated-text").innerHTML = `<i class="fa-regular fa-clock mr-1"></i>最終更新: ${appData.generated_at || "本日"}`;
+      document.getElementById("last-updated-text").innerText = `更新: ${appData.generated_at ? appData.generated_at.slice(5, 16) : "本日"}`;
 
       const pillsContainer = document.getElementById("trip-pills-container");
       pillsContainer.innerHTML = "";
@@ -274,7 +483,6 @@
 
       if (currentTripIndex >= appData.trips.length) currentTripIndex = 0;
 
-      // Render Pills
       appData.trips.forEach((trip, idx) => {
         const btn = document.createElement("button");
         btn.onclick = () => selectTrip(idx);
@@ -282,21 +490,52 @@
 
         let badge = "";
         if (trip.has_cheaper_option) {
-          badge = `<span class="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full ml-1 font-bold">🔥 -¥${trip.max_saved_amount.toLocaleString()}</span>`;
+          badge = `<span class="bg-emerald-600 text-white text-[10px] px-1.5 py-0.5 rounded ml-1.5 font-bold">-¥${trip.max_saved_amount.toLocaleString()}</span>`;
         } else if (trip.booked_price) {
-          badge = `<span class="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded-full ml-1">キープ済</span>`;
+          badge = `<span class="bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.5 rounded ml-1.5">予約済</span>`;
         }
 
-        btn.className = `whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center shrink-0 ${
+        btn.className = `whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center shrink-0 ${
           isActive 
-            ? "bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300" 
-            : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+            ? "bg-slate-800 text-white shadow-sm ring-1 ring-slate-700" 
+            : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
         }`;
-        btn.innerHTML = `<span>${trip.checkin_date.slice(5)} ${trip.management_name}</span>${badge}`;
+        btn.innerHTML = `<span>${escapeHtml(trip.management_name)}</span>${badge}`;
         pillsContainer.appendChild(btn);
       });
 
       renderActiveTrip(appData.trips[currentTripIndex]);
+    }
+
+    
+    function updatePriceCalculations() {
+      const nights = Math.max(1, parseInt(document.getElementById("input-nights").value, 10) || 1);
+      const bookedVal = document.getElementById("input-booked-price").value;
+      const budgetVal = document.getElementById("input-budget").value;
+
+      const avgEl = document.getElementById("calc-booked-avg");
+      if (avgEl) {
+        if (bookedVal && nights > 1) {
+          const avg = Math.round(parseFloat(bookedVal) / nights);
+          avgEl.innerHTML = `<i class="fa-solid fa-calculator mr-1"></i>1泊平均: ¥${avg.toLocaleString()}`;
+        } else {
+          avgEl.innerText = "";
+        }
+      }
+
+      const budgetTotalEl = document.getElementById("calc-budget-total");
+      if (budgetTotalEl) {
+        if (budgetVal && nights > 1) {
+          const total = parseInt(budgetVal, 10) * nights;
+          budgetTotalEl.innerText = `${nights}泊総額上限: ¥${total.toLocaleString()}`;
+        } else {
+          budgetTotalEl.innerText = "";
+        }
+      }
+    }
+
+    function handleNightsChange() {
+      updatePriceCalculations();
     }
 
     function selectTrip(idx) {
@@ -311,67 +550,80 @@
       const tagsBar = document.getElementById("trip-tags-bar");
       const cardsContainer = document.getElementById("hotel-cards-container");
 
-      // 1. Status Banner
       if (trip.booked_price) {
+        const nights = trip.stay_nights || 1;
+        const bookedAvg = Math.round(trip.booked_price / nights);
+        const bookedNote = nights > 1 
+          ? `総額 ¥${trip.booked_price.toLocaleString()}（1泊平均 ¥${bookedAvg.toLocaleString()}）`
+          : `¥${trip.booked_price.toLocaleString()}`;
+
         if (trip.has_cheaper_option) {
-          banner.className = "mb-5 rounded-2xl p-4 shadow-sm border bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400";
-          banner.innerHTML = `
-            <div class="flex items-start justify-between">
-              <div>
-                <span class="inline-block bg-white/20 text-white text-[11px] px-2 py-0.5 rounded-md font-bold mb-1">
-                  🔥 乗り換えチャンス！
-                </span>
-                <h3 class="text-lg font-black tracking-tight">現在の予約より 最大 ¥${trip.max_saved_amount.toLocaleString()} 安い！</h3>
-                <p class="text-xs text-emerald-100 mt-0.5">キープ中価格 (¥${trip.booked_price.toLocaleString()}) を下回る優良プランが ${trip.cheaper_count} 件 あります。</p>
-              </div>
-              <div class="text-3xl text-white/90 ml-2">🎉</div>
-            </div>
-          `;
-        } else {
-          banner.className = "mb-5 rounded-2xl p-4 shadow-sm border bg-blue-50 text-blue-900 border-blue-200";
+          banner.className = "mb-4 rounded-xl p-3.5 shadow-sm border bg-emerald-50 border-emerald-200 text-emerald-950";
           banner.innerHTML = `
             <div class="flex items-center justify-between">
               <div>
-                <span class="inline-block bg-blue-200 text-blue-800 text-[11px] px-2 py-0.5 rounded-md font-bold mb-1">安心キープ中</span>
-                <h3 class="text-sm font-bold">現在の予約 (¥${trip.booked_price.toLocaleString()}) が最安値です</h3>
-                <p class="text-xs text-blue-700 mt-0.5">値下がりが出現した場合は毎朝ここで自動ハイライトします。</p>
+                <span class="inline-block bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded font-bold mb-1">価格改定検出</span>
+                <h3 class="text-sm font-bold text-emerald-900">
+                  現在予約中の${nights > 1 ? "総額" : "価格"}（${bookedNote}）より <span class="text-emerald-700 font-extrabold underline underline-offset-2">¥${trip.max_saved_amount.toLocaleString()} 安価なプラン</span> が見つかりました
+                </h3>
+                <p class="text-xs text-emerald-800 mt-0.5">予約中のプランを下回る条件合致プランが ${trip.cheaper_count} 件 あります。</p>
               </div>
-              <div class="text-2xl text-blue-400">🛡️</div>
+              <div class="text-2xl text-emerald-600 ml-2"><i class="fa-solid fa-arrow-trend-down"></i></div>
+            </div>
+          `;
+        } else {
+          banner.className = "mb-4 rounded-xl p-3.5 shadow-sm border bg-slate-50 border-slate-200 text-slate-800";
+          banner.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="inline-block bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded font-bold mb-1">予約状況: 確保済み</span>
+                <h3 class="text-sm font-bold text-slate-800">現在の予約${nights > 1 ? "総額" : "価格"}（${bookedNote}）が最安です</h3>
+                <p class="text-xs text-slate-500 mt-0.5">条件に合致し、かつ現在より安価なプランが出現した際は自動で検知されます。</p>
+              </div>
+              <div class="text-xl text-slate-400"><i class="fa-solid fa-shield-halved"></i></div>
             </div>
           `;
         }
       } else {
-        banner.className = "mb-5 rounded-2xl p-4 shadow-sm border bg-indigo-50 text-indigo-900 border-indigo-200";
+        banner.className = "mb-4 rounded-xl p-3.5 shadow-sm border bg-indigo-50 border-indigo-200 text-indigo-950";
         banner.innerHTML = `
           <div class="flex items-center justify-between">
             <div>
-              <span class="inline-block bg-indigo-200 text-indigo-800 text-[11px] px-2 py-0.5 rounded-md font-bold mb-1">未予約</span>
-              <h3 class="text-sm font-bold">${trip.destination} 周辺の最安プラン TOP 5</h3>
-              <p class="text-xs text-indigo-700 mt-0.5">条件に合致する上位のおすすめプランを料金順に表示中。</p>
+              <span class="inline-block bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded font-bold mb-1">未予約</span>
+              <h3 class="text-sm font-bold text-indigo-900">${escapeHtml(trip.destination)} 周辺の最安プラン一覧</h3>
+              <p class="text-xs text-indigo-700 mt-0.5">設定条件を満たすおすすめプランを料金の安い順に表示しています。</p>
             </div>
-            <div class="text-2xl text-indigo-400">🏆</div>
+            <div class="text-xl text-indigo-500"><i class="fa-solid fa-ranking-star"></i></div>
           </div>
         `;
       }
 
-      // 2. Tags Bar
       tagsBar.innerHTML = `
-        <span class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-medium"><i class="fa-solid fa-location-dot text-indigo-500 mr-1"></i>${trip.destination}</span>
-        <span class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-medium"><i class="fa-regular fa-calendar text-indigo-500 mr-1"></i>${trip.checkin_date} (${trip.stay_nights}泊)</span>
-        <span class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-medium"><i class="fa-solid fa-person-walking text-indigo-500 mr-1"></i>徒歩${trip.filters?.max_walk || 10}分以内</span>
-        ${trip.filters?.smoking ? `<span class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-medium">${trip.filters.smoking}</span>` : ""}
-        ${trip.filters?.breakfast && trip.filters.breakfast !== "指定なし" ? `<span class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-medium">${trip.filters.breakfast}</span>` : ""}
-        <button onclick="deleteTrip('${trip.id}')" class="text-slate-400 hover:text-rose-500 ml-auto text-xs py-1 transition">
-          <i class="fa-solid fa-trash-can mr-1"></i>この出張を削除
-        </button>
+        <span class="font-bold text-slate-800 mr-1">${escapeHtml(trip.management_name)}</span>
+        <span class="text-slate-300">|</span>
+        <span><i class="fa-solid fa-location-dot text-indigo-500 mr-1"></i>基準地: <strong>${escapeHtml(trip.destination)}</strong></span>
+        <span><i class="fa-regular fa-calendar text-indigo-500 mr-1"></i>${trip.checkin_date} (${trip.stay_nights || 1}泊)</span>
+        <span><i class="fa-solid fa-person-walking text-slate-400 mr-1"></i>基準地から徒歩${trip.filters?.max_walk || 10}分以内</span>
+        <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[11px]">${trip.filters?.smoking || "禁煙"}</span>
+        ${trip.filters?.breakfast && trip.filters.breakfast !== "指定なし" ? `<span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[11px]">${trip.filters.breakfast}</span>` : ""}
+        
+        <div class="ml-auto flex items-center space-x-2">
+          <button onclick="editTrip('${trip.id}')" class="text-slate-600 hover:text-indigo-600 text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 transition font-medium flex items-center space-x-1 border border-slate-200">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>条件を変更</span>
+          </button>
+          <button onclick="deleteTrip('${trip.id}')" class="text-slate-400 hover:text-rose-600 text-xs py-1 transition flex items-center space-x-1">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>削除</span>
+          </button>
+        </div>
       `;
 
-      // 3. Hotel Cards
       cardsContainer.innerHTML = "";
       if (!trip.hotels || trip.hotels.length === 0) {
         cardsContainer.innerHTML = `
-          <div class="text-center py-10 bg-white rounded-2xl border border-slate-200 p-4">
-            <p class="text-sm text-slate-500">条件（徒歩分数・上限予算）に合致するホテルが見つかりませんでした。</p>
+          <div class="text-center py-10 bg-white rounded-xl border border-slate-200 p-4">
+            <p class="text-xs text-slate-500">条件に合致する宿泊施設が見つかりませんでした。</p>
           </div>
         `;
         return;
@@ -379,72 +631,66 @@
 
       trip.hotels.forEach((hotel, idx) => {
         const card = document.createElement("div");
-        card.className = "bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 transition hover:shadow-md";
+        card.className = "bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 transition hover:border-slate-300";
 
         const isCheaper = hotel.cheaper_than_booked;
-        const agentBg = hotel.agent === "楽天トラベル" ? "bg-red-600" : "bg-orange-500";
+        const agentBadge = hotel.agent === "楽天トラベル" 
+          ? "bg-rose-50 text-rose-700 border border-rose-200" 
+          : "bg-orange-50 text-orange-700 border border-orange-200";
 
         card.innerHTML = `
           <div class="flex flex-col sm:flex-row">
-            <!-- Thumbnail Image -->
-            <div class="sm:w-48 h-36 sm:h-auto relative bg-slate-100 shrink-0">
+            <div class="sm:w-44 h-32 sm:h-auto relative bg-slate-100 shrink-0">
               <img src="${hotel.image_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80'}" alt="${hotel.hotel_name}" class="w-full h-full object-cover">
-              <span class="absolute top-2 left-2 ${agentBg} text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow">
+              <span class="absolute top-2 left-2 ${agentBadge} text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">
                 ${hotel.agent}
               </span>
-              <span class="absolute top-2 right-2 bg-slate-900/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+              <span class="absolute top-2 right-2 bg-slate-900/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                 ${idx + 1}位
               </span>
             </div>
 
-            <!-- Content Area -->
-            <div class="p-4 flex-1 flex flex-col justify-between">
+            <div class="p-3.5 flex-1 flex flex-col justify-between">
               <div>
-                <!-- Cheaper Badge / Price Diff Badge -->
                 ${isCheaper ? `
-                  <div class="inline-flex items-center space-x-1 bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold mb-1.5">
+                  <div class="inline-flex items-center space-x-1 bg-emerald-50 text-emerald-800 text-[11px] px-2 py-0.5 rounded border border-emerald-300 font-bold mb-1.5">
                     <i class="fa-solid fa-arrow-trend-down text-emerald-600"></i>
-                    <span>今の予約より -¥${hotel.saved_amount.toLocaleString()} 安い！</span>
+                    <span>現在予約より -¥${hotel.saved_amount.toLocaleString()}</span>
                   </div>
                 ` : ""}
 
-                <!-- Hotel Title -->
-                <h4 class="font-bold text-slate-900 text-base leading-tight mb-1">
+                <h4 class="font-bold text-slate-900 text-sm leading-snug mb-1">
                   ${hotel.hotel_name}
                 </h4>
 
-                <!-- Meta stats: Walk & Stars -->
-                <div class="flex items-center space-x-3 text-xs text-slate-600 mb-2">
-                  <span class="flex items-center text-amber-500 font-bold">
-                    <i class="fa-solid fa-star mr-1"></i>${hotel.review_rate ? hotel.review_rate.toFixed(1) : "4.0"}
+                <div class="flex items-center space-x-3 text-xs text-slate-500 mb-2">
+                  <span class="flex items-center text-amber-600 font-semibold">
+                    <i class="fa-solid fa-star text-amber-400 mr-1 text-[11px]"></i>${hotel.review_rate ? hotel.review_rate.toFixed(1) : "4.0"}
                   </span>
-                  <span><i class="fa-solid fa-person-walking text-slate-400 mr-1"></i>徒歩 ${hotel.walk_minutes} 分</span>
+                  <span><i class="fa-solid fa-person-walking text-slate-500 mr-1"></i><strong>${trip.destination}</strong>から徒歩 ${hotel.walk_minutes}分</span>
                 </div>
 
-                <!-- Plan Name -->
-                <p class="text-xs text-slate-500 line-clamp-2 mb-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                <p class="text-[11px] text-slate-600 line-clamp-2 mb-2 bg-slate-50 p-1.5 rounded border border-slate-100">
                   ${hotel.plan_name}
                 </p>
 
-                <!-- Tags -->
-                <div class="flex flex-wrap gap-1 mb-3">
-                  ${(hotel.tags || []).map(t => `<span class="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-md font-medium">${t}</span>`).join("")}
+                <div class="flex flex-wrap gap-1 mb-2">
+                  ${(hotel.tags || []).map(t => `<span class="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded">${t}</span>`).join("")}
                 </div>
               </div>
 
-              <!-- Price & Booking Button -->
-              <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+              <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between">
                 <div>
-                  <span class="text-[10px] text-slate-400 block">1泊税込 最安値</span>
-                  <div class="text-xl font-black text-rose-600 tracking-tight">
-                    ¥${hotel.price.toLocaleString()}
+                  <span class="text-[10px] text-slate-400 block">${(trip.stay_nights || 1) > 1 ? `${trip.stay_nights}泊総額（全泊分・税込）` : "1泊料金（税込）"}</span>
+                  <div class="text-lg font-bold text-slate-900 tracking-tight">
+                    ¥${(hotel.total_price || (hotel.price * (trip.stay_nights || 1))).toLocaleString()}
                   </div>
+                  ${(trip.stay_nights || 1) > 1 ? `<span class="text-[10px] text-slate-500 block">1泊あたり ¥${hotel.price.toLocaleString()}</span>` : ""}
                 </div>
 
-                <!-- Direct Booking Action Button -->
-                <a href="${hotel.url}" target="_blank" rel="noopener noreferrer" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:shadow transition active:scale-95 flex items-center space-x-1.5">
-                  <span>${hotel.agent}で予約</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                <a href="${hotel.url}" target="_blank" rel="noopener noreferrer" class="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs px-3.5 py-2 rounded-lg transition active:scale-95 flex items-center space-x-1.5 shadow-sm">
+                  <span>${hotel.agent}で詳細を確認</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-slate-300"></i>
                 </a>
               </div>
             </div>
@@ -454,7 +700,6 @@
       });
     }
 
-    // Switch between List and Add tabs
     function switchNav(tab) {
       const listBtn = document.getElementById("nav-btn-list");
       const addBtn = document.getElementById("nav-btn-add");
@@ -462,94 +707,177 @@
       const addSec = document.getElementById("section-add");
 
       if (tab === "list") {
-        listBtn.className = "flex-1 py-3 text-center text-sm font-semibold border-b-2 border-amber-400 text-amber-300 flex items-center justify-center space-x-2";
-        addBtn.className = "flex-1 py-3 text-center text-sm font-semibold border-b-2 border-transparent text-indigo-300 hover:text-white flex items-center justify-center space-x-2";
+        listBtn.className = "flex-1 py-2.5 text-center text-xs font-bold border-b-2 border-indigo-400 text-white flex items-center justify-center space-x-2 transition";
+        addBtn.className = "flex-1 py-2.5 text-center text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center justify-center space-x-2 transition";
         listSec.classList.remove("hidden");
         addSec.classList.add("hidden");
       } else {
-        addBtn.className = "flex-1 py-3 text-center text-sm font-semibold border-b-2 border-amber-400 text-amber-300 flex items-center justify-center space-x-2";
-        listBtn.className = "flex-1 py-3 text-center text-sm font-semibold border-b-2 border-transparent text-indigo-300 hover:text-white flex items-center justify-center space-x-2";
+        addBtn.className = "flex-1 py-2.5 text-center text-xs font-bold border-b-2 border-indigo-400 text-white flex items-center justify-center space-x-2 transition";
+        listBtn.className = "flex-1 py-2.5 text-center text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center justify-center space-x-2 transition";
         addSec.classList.remove("hidden");
         listSec.classList.add("hidden");
+
+        const dateInput = document.getElementById("input-date");
+        if (!dateInput.value) {
+          const d = new Date();
+          d.setDate(d.getDate() + 14);
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          dateInput.value = `${year}-${month}-${day}`;
+        }
       }
     }
 
-    // Handle Form Submit
+    function editTrip(id) {
+      const trip = appData.trips.find(t => t.id === id);
+      if (!trip) return;
+
+      document.getElementById("input-trip-id").value = trip.id;
+      document.getElementById("form-title").innerText = "出張条件の変更";
+      document.getElementById("form-subtitle").innerText = "日程・予算・仮予約価格・こだわり条件を変更できます。";
+      document.getElementById("btn-submit-text").innerText = "変更を保存する";
+      document.getElementById("btn-submit-icon").className = "fa-solid fa-check";
+      document.getElementById("btn-cancel-edit").classList.remove("hidden");
+
+      document.getElementById("input-name").value = trip.management_name || "";
+      document.getElementById("input-dest").value = trip.destination || "";
+      document.getElementById("input-date").value = trip.checkin_date || "";
+      document.getElementById("input-nights").value = trip.stay_nights || 1;
+      document.getElementById("input-booked-price").value = trip.booked_price || "";
+      document.getElementById("input-budget").value = trip.filters?.budget_max || 16000;
+      document.getElementById("input-walk").value = trip.filters?.max_walk || 10;
+      document.getElementById("input-smoking").value = trip.filters?.smoking || "禁煙";
+      document.getElementById("input-breakfast").value = trip.filters?.breakfast || "指定なし";
+      document.getElementById("input-rate").value = trip.filters?.min_review || 4.0;
+      document.getElementById("input-adults").value = trip.adult_num || 1;
+
+      switchNav("add");
+      updatePriceCalculations();
+    }
+
+    function cancelEdit() {
+      resetFormToAddMode();
+      switchNav("list");
+    }
+
+    function resetFormToAddMode() {
+      document.getElementById("add-trip-form").reset();
+      document.getElementById("input-trip-id").value = "";
+      document.getElementById("form-title").innerText = "新規出張・旅行の登録";
+      document.getElementById("form-subtitle").innerText = "日程と条件を設定すると、毎朝の最安値チェックと価格比較を開始します。";
+      document.getElementById("btn-submit-text").innerText = "登録して価格監視を開始する";
+      document.getElementById("btn-submit-icon").className = "fa-solid fa-magnifying-glass";
+      document.getElementById("btn-cancel-edit").classList.add("hidden");
+    }
+
     function handleAddTrip(e) {
       e.preventDefault();
-      const rawDate = document.getElementById("input-date").value.trim();
+      const editingId = document.getElementById("input-trip-id").value;
+      const mgmtName = document.getElementById("input-name").value.trim();
       const dest = document.getElementById("input-dest").value.trim();
-      const rawName = document.getElementById("input-name").value.trim();
+      const checkinDate = document.getElementById("input-date").value;
+      const nights = parseInt(document.getElementById("input-nights").value, 10) || 1;
       const bookedPrice = document.getElementById("input-booked-price").value ? parseInt(document.getElementById("input-booked-price").value, 10) : null;
-      const budget = parseInt(document.getElementById("input-budget").value, 10) || 15000;
+      const budget = parseInt(document.getElementById("input-budget").value, 10) || 16000;
       const walk = parseInt(document.getElementById("input-walk").value, 10) || 10;
       const smoking = document.getElementById("input-smoking").value;
       const breakfast = document.getElementById("input-breakfast").value;
-      const rate = parseFloat(document.getElementById("input-rate").value) || 3.5;
-      const nights = parseInt(document.getElementById("input-nights").value, 10) || 1;
+      const rateRaw = parseFloat(document.getElementById("input-rate").value);
+      const rate = isNaN(rateRaw) ? 3.5 : rateRaw;
       const adults = parseInt(document.getElementById("input-adults").value, 10) || 1;
 
-      // Expand comma dates
-      const dateTokens = rawDate.replace(/、/g, ",").split(",").map(d => d.trim()).filter(Boolean);
+      // 予約価格は全泊分の総額のため、1泊あたりの目安基準額を算出
+      const bookedPerNight = (bookedPrice && nights > 0) ? Math.round(bookedPrice / nights) : null;
 
-      const newTrips = [];
-      dateTokens.forEach(dStr => {
-        const mgmtName = rawName || `${dest}出張`;
-        const tripId = "custom-" + Date.now() + "-" + Math.random().toString(36).substr(2, 5);
+      const mockHotels = [
+        {
+          hotel_id: "demo_1",
+          hotel_name: `スーパーホテルPremier${dest}口`,
+          price: bookedPerNight ? Math.max(3000, Math.min(bookedPerNight - 2100, 9900)) : 9900,
+          walk_minutes: Math.max(2, Math.floor(walk * 0.4)),
+          review_rate: 4.3,
+          agent: "楽天トラベル",
+          plan_name: "【スタンダードプラン】天然温泉完備・清潔な禁煙ルーム",
+          image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80",
+          url: `https://travel.rakuten.co.jp/search?f_query=${encodeURIComponent(dest)}`,
+          tags: ["徒歩4分", "天然温泉", smoking]
+        },
+        {
+          hotel_id: "demo_2",
+          hotel_name: `京王プレッソイン${dest}`,
+          price: bookedPerNight ? Math.max(3000, Math.min(bookedPerNight - 1100, 10900)) : 10900,
+          walk_minutes: Math.max(3, Math.floor(walk * 0.6)),
+          review_rate: 4.1,
+          agent: "じゃらん",
+          plan_name: "【ビジネス応援】軽朝食サービス・無料高速Wi-Fi完備",
+          image_url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=400&q=80",
+          url: `https://www.jalan.net/uw/uwp3000/uww3001.do?keyword=${encodeURIComponent(dest)}`,
+          tags: ["徒歩6分", "軽朝食付き", smoking]
+        }
+      ].map((h, i) => {
+        const total = h.price * nights;
+        const isCheaper = bookedPrice ? total < bookedPrice : false;
+        const saved = isCheaper ? (bookedPrice - total) : 0;
+        return {
+          ...h,
+          total_price: total,
+          rank: i + 1,
+          cheaper_than_booked: isCheaper,
+          saved_amount: saved
+        };
+      });
 
-        // Generate realistic preview hotel options immediately
-        const mockHotels = [
-          {
-            hotel_id: "demo_1",
-            hotel_name: `スーパーホテルPremier${dest}八重洲口`,
-            price: bookedPrice ? Math.min(bookedPrice - 2500, 9500) : 9500,
-            walk_minutes: 4,
-            review_rate: 4.3,
-            agent: "楽天トラベル",
-            plan_name: "【公式限定・禁煙】天然温泉＆焼きたてパン朝食ビュッフェ付スマートSTAY",
-            image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80",
-            url: `https://travel.rakuten.co.jp/search?f_query=${encodeURIComponent(dest)}`,
-            tags: ["禁煙", "天然温泉", "朝食無料"],
-            cheaper_than_booked: bookedPrice ? true : false,
-            saved_amount: bookedPrice ? 2500 : 0
-          },
-          {
-            hotel_id: "demo_2",
-            hotel_name: `京王プレッソイン${dest}中央通り`,
-            price: bookedPrice ? Math.min(bookedPrice - 1200, 10800) : 10800,
-            walk_minutes: 6,
-            review_rate: 4.1,
-            agent: "じゃらん",
-            plan_name: "【直前割】シンプルステイ☆軽朝食無料サービス（禁煙シングル）",
-            image_url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=400&q=80",
-            url: `https://www.jalan.net/uw/uwp3000/uww3001.do?keyword=${encodeURIComponent(dest)}`,
-            tags: ["禁煙", "軽朝食付"],
-            cheaper_than_booked: bookedPrice ? true : false,
-            saved_amount: bookedPrice ? 1200 : 0
-          },
-          {
-            hotel_id: "demo_3",
-            hotel_name: `アパホテル＆リゾート${dest}駅前`,
-            price: bookedPrice ? Math.min(bookedPrice - 3100, 8900) : 8900,
-            walk_minutes: 3,
-            review_rate: 4.0,
-            agent: "楽天トラベル",
-            plan_name: "【素泊まり】駅チカ直結！大浴殿・露天風呂無料利用プラン",
-            image_url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=400&q=80",
-            url: `https://travel.rakuten.co.jp/search?f_query=${encodeURIComponent(dest)}`,
-            tags: ["駅徒歩3分", "露天風呂付大浴場"],
-            cheaper_than_booked: bookedPrice ? true : false,
-            saved_amount: bookedPrice ? 3100 : 0
+      const hasCheaper = bookedPrice ? mockHotels.some(h => h.cheaper_than_booked) : false;
+      const maxSaved = hasCheaper ? Math.max(...mockHotels.map(h => h.saved_amount)) : 0;
+
+      if (editingId) {
+        // Edit existing trip
+        const tripIndex = appData.trips.findIndex(t => t.id === editingId);
+        if (tripIndex !== -1) {
+          const updatedTrip = {
+            ...appData.trips[tripIndex],
+            management_name: mgmtName,
+            checkin_date: checkinDate,
+            stay_nights: nights,
+            adult_num: adults,
+            destination: dest,
+            booked_price: bookedPrice,
+            has_cheaper_option: hasCheaper,
+            max_saved_amount: maxSaved,
+            cheaper_count: mockHotels.filter(h => h.cheaper_than_booked).length,
+            filters: {
+              smoking: smoking,
+              breakfast: breakfast,
+              max_walk: walk,
+              min_review: rate,
+              budget_max: budget
+            },
+            hotels: mockHotels
+          };
+          appData.trips[tripIndex] = updatedTrip;
+          currentTripIndex = tripIndex;
+
+          // Update localStorage
+          let localTrips = [];
+          try { localTrips = JSON.parse(localStorage.getItem("user_custom_trips") || "[]"); } catch(e) { console.warn("localStorage parse error", e); }
+          const localIdx = localTrips.findIndex(t => t.id === editingId);
+          if (localIdx !== -1) {
+            localTrips[localIdx] = updatedTrip;
+          } else {
+            localTrips.unshift(updatedTrip);
           }
-        ];
+          try { localStorage.setItem("user_custom_trips", JSON.stringify(localTrips)); } catch(e) { console.warn("localStorage save error", e); }
 
-        const hasCheaper = bookedPrice ? mockHotels.some(h => h.cheaper_than_booked) : false;
-        const maxSaved = hasCheaper ? Math.max(...mockHotels.map(h => h.saved_amount)) : 0;
-
-        newTrips.push({
+          showToast("出張条件を更新しました");
+        }
+      } else {
+        // Add new trip
+        const tripId = "custom-" + Date.now();
+        const newTrip = {
           id: tripId,
           management_name: mgmtName,
-          checkin_date: dStr,
+          checkin_date: checkinDate,
           stay_nights: nights,
           adult_num: adults,
           destination: dest,
@@ -557,6 +885,7 @@
           has_cheaper_option: hasCheaper,
           max_saved_amount: maxSaved,
           cheaper_count: mockHotels.filter(h => h.cheaper_than_booked).length,
+          total_matched: mockHotels.length,
           filters: {
             smoking: smoking,
             breakfast: breakfast,
@@ -565,35 +894,38 @@
             budget_max: budget
           },
           hotels: mockHotels
-        });
-      });
+        };
 
-      // Save to local storage
-      const existing = JSON.parse(localStorage.getItem("user_custom_trips") || "[]");
-      const merged = [...newTrips, ...existing];
-      localStorage.setItem("user_custom_trips", JSON.stringify(merged));
+        let existing = [];
+        try { existing = JSON.parse(localStorage.getItem("user_custom_trips") || "[]"); } catch(e) { console.warn("localStorage parse error", e); }
+        existing.unshift(newTrip);
+        try { localStorage.setItem("user_custom_trips", JSON.stringify(existing)); } catch(e) { console.warn("localStorage save error", e); }
 
-      // Update appData
-      appData.trips = [...newTrips, ...appData.trips];
-      currentTripIndex = 0;
+        appData.trips = [newTrip, ...appData.trips];
+        currentTripIndex = 0;
+        showToast("出張を登録しました");
+      }
 
-      // Reset form
-      document.getElementById("add-trip-form").reset();
-      showToast(`${dateTokens.length}件の出張を登録しました！`);
-
-      // Switch to list view directly
+      resetFormToAddMode();
       switchNav("list");
       renderDashboard();
     }
 
     function deleteTrip(id) {
-      if (!confirm("この出張を監視対象から削除しますか？")) return;
+      if (!confirm("この出張予定を監視対象から削除しますか？")) return;
+      const deletedIdx = appData.trips.findIndex(t => t.id === id);
       appData.trips = appData.trips.filter(t => t.id !== id);
+      if (deletedIdx >= 0 && deletedIdx < currentTripIndex) {
+        currentTripIndex = Math.max(0, currentTripIndex - 1);
+      } else if (currentTripIndex >= appData.trips.length) {
+        currentTripIndex = Math.max(0, appData.trips.length - 1);
+      }
       
-      const localTrips = JSON.parse(localStorage.getItem("user_custom_trips") || "[]").filter(t => t.id !== id);
-      localStorage.setItem("user_custom_trips", JSON.stringify(localTrips));
+      let localTrips = [];
+      try { localTrips = JSON.parse(localStorage.getItem("user_custom_trips") || "[]").filter(t => t.id !== id); } catch(e) { console.warn("localStorage parse error", e); }
+      try { localStorage.setItem("user_custom_trips", JSON.stringify(localTrips)); } catch(e) { console.warn("localStorage save error", e); }
 
-      showToast("出張を削除しました");
+      showToast("出張予定を削除しました");
       renderDashboard();
     }
 
@@ -608,7 +940,1438 @@
       }, 2500);
     }
 
-    // Init on page load
+
+    // ==========================================
+    // 目的地オートコンプリート・サジェスト辞書＆機能
+    // ==========================================
+    const POPULAR_DESTINATIONS = [
+      {
+            "name": "京都きもの友禅 本社",
+            "area": "東京都中央区日本橋蛎殻町1-14-4",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "日本橋",
+                  "水天宮前"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 新宿店",
+            "area": "東京都新宿区西新宿1-14-11",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "新宿",
+                  "西新宿"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 銀座店",
+            "area": "東京都中央区銀座5-8-20",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "銀座"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 渋谷店",
+            "area": "東京都渋谷区渋谷1-14-14",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "渋谷"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 池袋店",
+            "area": "東京都豊島区南池袋1-19-6",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "池袋"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 横浜店",
+            "area": "神奈川県横浜市西区北幸1-4-1",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "横浜"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 千葉店",
+            "area": "千葉県千葉市中央区富士見2-3-1",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "千葉"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 大宮店",
+            "area": "埼玉県さいたま市大宮区仲町1-54-3",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "大宮"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 宇都宮店",
+            "area": "栃木県宇都宮市駅前通り1-4-6",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "宇都宮"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 高崎店",
+            "area": "群馬県高崎市八島町58-1",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "高崎"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 仙台店",
+            "area": "宮城県仙台市青葉区中央2-2-10",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "仙台"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 札幌店",
+            "area": "北海道札幌市中央区北4条西4-1",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "札幌"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 静岡店",
+            "area": "静岡県静岡市葵区御幸町11-30",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "静岡"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 名古屋店",
+            "area": "愛知県名古屋市中区錦3-24-24",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "名古屋",
+                  "栄"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 梅田店",
+            "area": "大阪府大阪市北区梅田1-1-3",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "梅田",
+                  "大阪"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 なんば店",
+            "area": "大阪府大阪市中央区難波4-4-4",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "なんば",
+                  "難波"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 京都店",
+            "area": "京都府京都市下京区長刀鉾町20",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "京都",
+                  "烏丸"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 神戸店",
+            "area": "兵庫県神戸市中央区三宮町1-10-1",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "神戸",
+                  "三宮"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 岡山店",
+            "area": "岡山県岡山市北区本町6-36",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "岡山"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 広島店",
+            "area": "広島県広島市中区胡町4-28",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "広島",
+                  "八丁堀"
+            ]
+      },
+      {
+            "name": "京都きもの友禅 福岡店",
+            "area": "福岡県福岡市中央区天神2-8-38",
+            "type": "kimono",
+            "keywords": [
+                  "きょうときものゆうぜん",
+                  "京都きもの友禅",
+                  "友禅",
+                  "福岡",
+                  "天神"
+            ]
+      },
+      {
+            "name": "きものさが美 本社",
+            "area": "神奈川県横浜市西区みなとみらい2-2-1",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "横浜",
+                  "みなとみらい"
+            ]
+      },
+      {
+            "name": "きものさが美 銀座店",
+            "area": "東京都中央区銀座",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "銀座"
+            ]
+      },
+      {
+            "name": "きものさが美 新宿店",
+            "area": "東京都新宿区西新宿",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "新宿"
+            ]
+      },
+      {
+            "name": "きものさが美 横浜店",
+            "area": "神奈川県横浜市西区南幸",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "横浜"
+            ]
+      },
+      {
+            "name": "きものさが美 大宮店",
+            "area": "埼玉県さいたま市大宮区錦町",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "大宮"
+            ]
+      },
+      {
+            "name": "きものさが美 千葉店",
+            "area": "千葉県千葉市中央区新町",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "千葉"
+            ]
+      },
+      {
+            "name": "きものさが美 静岡店",
+            "area": "静岡県静岡市葵区御幸町",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "静岡"
+            ]
+      },
+      {
+            "name": "きものさが美 名古屋店",
+            "area": "愛知県名古屋市中村区名駅",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "名古屋",
+                  "名駅"
+            ]
+      },
+      {
+            "name": "きものさが美 大阪店",
+            "area": "大阪府大阪市北区梅田",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "大阪",
+                  "梅田"
+            ]
+      },
+      {
+            "name": "きものさが美 京都店",
+            "area": "京都府京都市下京区四条通",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "京都",
+                  "四条"
+            ]
+      },
+      {
+            "name": "きものさが美 神戸店",
+            "area": "兵庫県神戸市中央区雲井通",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "神戸",
+                  "三宮"
+            ]
+      },
+      {
+            "name": "きものさが美 広島店",
+            "area": "広島県広島市中区基町",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "広島"
+            ]
+      },
+      {
+            "name": "きものさが美 福岡店",
+            "area": "福岡県福岡市中央区天神",
+            "type": "kimono",
+            "keywords": [
+                  "さがみ",
+                  "さが美",
+                  "きものさが美",
+                  "福岡",
+                  "天神"
+            ]
+      },
+      {
+            "name": "カンダキラット 本社",
+            "area": "栃木県足利市田中町95-7",
+            "type": "jewelry",
+            "keywords": [
+                  "かんだきらっと",
+                  "カンダキラット",
+                  "キラット",
+                  "KIRAT",
+                  "菅田",
+                  "足利"
+            ]
+      },
+      {
+            "name": "カンダキラット 東京オフィス",
+            "area": "東京都台東区台東4-8-7",
+            "type": "jewelry",
+            "keywords": [
+                  "かんだきらっと",
+                  "カンダキラット",
+                  "キラット",
+                  "KIRAT",
+                  "菅田",
+                  "御徒町"
+            ]
+      },
+      {
+            "name": "カンダキラット 御徒町店",
+            "area": "東京都台東区上野5丁目",
+            "type": "jewelry",
+            "keywords": [
+                  "かんだきらっと",
+                  "カンダキラット",
+                  "キラット",
+                  "KIRAT",
+                  "御徒町",
+                  "上野"
+            ]
+      },
+      {
+            "name": "カンダキラット 錦糸町店",
+            "area": "東京都墨田区江東橋4-27-14",
+            "type": "jewelry",
+            "keywords": [
+                  "かんだきらっと",
+                  "カンダキラット",
+                  "キラット",
+                  "KIRAT",
+                  "錦糸町"
+            ]
+      },
+      {
+            "name": "カンダキラット 大宮店",
+            "area": "埼玉県さいたま市大宮区桜木町2-3",
+            "type": "jewelry",
+            "keywords": [
+                  "かんだきらっと",
+                  "カンダキラット",
+                  "キラット",
+                  "KIRAT",
+                  "大宮"
+            ]
+      },
+      {
+            "name": "カンダキラット 宇都宮店",
+            "area": "栃木県宇都宮市宮園町5-4",
+            "type": "jewelry",
+            "keywords": [
+                  "かんだきらっと",
+                  "カンダキラット",
+                  "キラット",
+                  "KIRAT",
+                  "宇都宮"
+            ]
+      },
+      {
+            "name": "カンダキラット 水戸店",
+            "area": "茨城県水戸市宮町1-1-1",
+            "type": "jewelry",
+            "keywords": [
+                  "かんだきらっと",
+                  "カンダキラット",
+                  "キラット",
+                  "KIRAT",
+                  "水戸"
+            ]
+      },
+      {
+            "name": "カンダキラット 高崎店",
+            "area": "群馬県高崎市八島町46-1",
+            "type": "jewelry",
+            "keywords": [
+                  "かんだきらっと",
+                  "カンダキラット",
+                  "キラット",
+                  "KIRAT",
+                  "高崎"
+            ]
+      },
+      {
+            "name": "カンダキラット 太田店",
+            "area": "群馬県太田市石原町81",
+            "type": "jewelry",
+            "keywords": [
+                  "かんだきらっと",
+                  "カンダキラット",
+                  "キラット",
+                  "KIRAT",
+                  "太田"
+            ]
+      },
+      {
+            "name": "カンダキラット 幕張店",
+            "area": "千葉県千葉市美浜区豊砂1-1",
+            "type": "jewelry",
+            "keywords": [
+                  "かんだきらっと",
+                  "カンダキラット",
+                  "キラット",
+                  "KIRAT",
+                  "幕張"
+            ]
+      },
+      {
+            "name": "カンダキラット 名古屋店",
+            "area": "愛知県名古屋市中村区名駅1-2-1",
+            "type": "jewelry",
+            "keywords": [
+                  "かんだきらっと",
+                  "カンダキラット",
+                  "キラット",
+                  "KIRAT",
+                  "名古屋"
+            ]
+      },
+      {
+            "name": "カンダキラット 大阪店",
+            "area": "大阪府大阪市北区梅田3-1-1",
+            "type": "jewelry",
+            "keywords": [
+                  "かんだきらっと",
+                  "カンダキラット",
+                  "キラット",
+                  "KIRAT",
+                  "大阪",
+                  "梅田"
+            ]
+      },
+      {
+            "name": "ジュエリーツツミ 本社",
+            "area": "埼玉県蕨市中央4-24-26",
+            "type": "jewelry",
+            "keywords": [
+                  "じゅえりーつつみ",
+                  "ジュエリーツツミ",
+                  "ツツミ",
+                  "TSUTSUMI",
+                  "蕨"
+            ]
+      },
+      {
+            "name": "ジュエリーツツミ 銀座並木通り店",
+            "area": "東京都中央区銀座5-4-3",
+            "type": "jewelry",
+            "keywords": [
+                  "じゅえりーつつみ",
+                  "ジュエリーツツミ",
+                  "ツツミ",
+                  "銀座"
+            ]
+      },
+      {
+            "name": "ジュエリーツツミ 新宿店",
+            "area": "東京都新宿区新宿3-28-1",
+            "type": "jewelry",
+            "keywords": [
+                  "じゅえりーつつみ",
+                  "ジュエリーツツミ",
+                  "ツツミ",
+                  "新宿"
+            ]
+      },
+      {
+            "name": "ジュエリーツツミ 渋谷店",
+            "area": "東京都渋谷区宇田川町28-7",
+            "type": "jewelry",
+            "keywords": [
+                  "じゅえりーつつみ",
+                  "ジュエリーツツミ",
+                  "ツツミ",
+                  "渋谷"
+            ]
+      },
+      {
+            "name": "ジュエリーツツミ 池袋店",
+            "area": "東京都豊島区東池袋1-2-7",
+            "type": "jewelry",
+            "keywords": [
+                  "じゅえりーつつみ",
+                  "ジュエリーツツミ",
+                  "ツツミ",
+                  "池袋"
+            ]
+      },
+      {
+            "name": "ジュエリーツツミ 名古屋栄店",
+            "area": "愛知県名古屋市中区栄3-4-6",
+            "type": "jewelry",
+            "keywords": [
+                  "じゅえりーつつみ",
+                  "ジュエリーツツミ",
+                  "ツツミ",
+                  "名古屋",
+                  "栄"
+            ]
+      },
+      {
+            "name": "ジュエリーツツミ 心斎橋店",
+            "area": "大阪府大阪市中央区心斎橋筋2-1-24",
+            "type": "jewelry",
+            "keywords": [
+                  "じゅえりーつつみ",
+                  "ジュエリーツツミ",
+                  "ツツミ",
+                  "心斎橋",
+                  "大阪"
+            ]
+      },
+      {
+            "name": "ジュエリーツツミ 福岡天神店",
+            "area": "福岡県福岡市中央区天神2-7-1",
+            "type": "jewelry",
+            "keywords": [
+                  "じゅえりーつつみ",
+                  "ジュエリーツツミ",
+                  "ツツミ",
+                  "福岡",
+                  "天神"
+            ]
+      },
+      {
+            "name": "ミキモト 銀座4丁目本店",
+            "area": "東京都中央区銀座4-5-5",
+            "type": "jewelry",
+            "keywords": [
+                  "みきもと",
+                  "MIKIMOTO",
+                  "銀座4丁目",
+                  "真珠"
+            ]
+      },
+      {
+            "name": "TASAKI 銀座本店",
+            "area": "東京都中央区銀座5-7-5",
+            "type": "jewelry",
+            "keywords": [
+                  "たさき",
+                  "TASAKI",
+                  "田崎真珠",
+                  "銀座"
+            ]
+      },
+      {
+            "name": "田中貴金属 銀座本店",
+            "area": "東京都中央区銀座7-7-7",
+            "type": "jewelry",
+            "keywords": [
+                  "たなかききんぞく",
+                  "田中貴金属",
+                  "GINZA TANAKA",
+                  "銀座"
+            ]
+      },
+      {
+            "name": "As-meエステール 本社",
+            "area": "東京都港区虎ノ門4-3-13",
+            "type": "jewelry",
+            "keywords": [
+                  "えすてーる",
+                  "エステール",
+                  "ESTELLE",
+                  "虎ノ門"
+            ]
+      },
+      {
+            "name": "きものやまと 新宿店",
+            "area": "東京都新宿区西新宿",
+            "type": "kimono",
+            "keywords": [
+                  "きものやまと",
+                  "やまと",
+                  "着物チェーン",
+                  "新宿"
+            ]
+      },
+      {
+            "name": "日本橋三越本店",
+            "area": "東京都中央区日本橋室町1-4-1",
+            "type": "dept",
+            "keywords": [
+                  "にほんばしみつこし",
+                  "三越本店",
+                  "三越前",
+                  "日本橋"
+            ]
+      },
+      {
+            "name": "伊勢丹新宿店",
+            "area": "東京都新宿区新宿3-14-1",
+            "type": "dept",
+            "keywords": [
+                  "いせたんしんじゅく",
+                  "伊勢丹",
+                  "新宿三丁目"
+            ]
+      },
+      {
+            "name": "銀座三越",
+            "area": "東京都中央区銀座4-6-16",
+            "type": "dept",
+            "keywords": [
+                  "ぎんざみつこし",
+                  "三越",
+                  "銀座"
+            ]
+      },
+      {
+            "name": "松屋銀座",
+            "area": "東京都中央区銀座3-6-1",
+            "type": "dept",
+            "keywords": [
+                  "まつやぎんざ",
+                  "松屋",
+                  "銀座"
+            ]
+      },
+      {
+            "name": "松坂屋名古屋店",
+            "area": "愛知県名古屋市中区栄3-16-1",
+            "type": "dept",
+            "keywords": [
+                  "まつざかやなごや",
+                  "松坂屋",
+                  "栄",
+                  "矢場町"
+            ]
+      },
+      {
+            "name": "ジェイアール名古屋タカシマヤ",
+            "area": "愛知県名古屋市中村区名駅1-1-4",
+            "type": "dept",
+            "keywords": [
+                  "なごやたかしまや",
+                  "タカシマヤ",
+                  "名駅",
+                  "高島屋"
+            ]
+      },
+      {
+            "name": "阪急うめだ本店",
+            "area": "大阪府大阪市北区角田町8-7",
+            "type": "dept",
+            "keywords": [
+                  "はんきゅううめだ",
+                  "阪急百貨店",
+                  "うめだ阪急",
+                  "梅田"
+            ]
+      },
+      {
+            "name": "髙島屋大阪店",
+            "area": "大阪府大阪市中央区難波5-1-18",
+            "type": "dept",
+            "keywords": [
+                  "たかしまやおおさか",
+                  "なんば高島屋",
+                  "難波",
+                  "髙島屋"
+            ]
+      },
+      {
+            "name": "大丸心斎橋店",
+            "area": "大阪府大阪市中央区心斎橋筋1-7-1",
+            "type": "dept",
+            "keywords": [
+                  "だいまるしんさいばし",
+                  "大丸",
+                  "心斎橋",
+                  "南船場"
+            ]
+      },
+      {
+            "name": "岩田屋本店",
+            "area": "福岡県福岡市中央区天神2-5-35",
+            "type": "dept",
+            "keywords": [
+                  "いわたや",
+                  "岩田屋",
+                  "天神",
+                  "福岡天神"
+            ]
+      },
+      {
+            "name": "大丸福岡天神店",
+            "area": "福岡県福岡市中央区天神1-4-1",
+            "type": "dept",
+            "keywords": [
+                  "だいまるふくおか",
+                  "大丸天神",
+                  "天神"
+            ]
+      },
+      {
+            "name": "御徒町駅",
+            "area": "東京都台東区上野5丁目",
+            "type": "station",
+            "keywords": [
+                  "おかちまち",
+                  "御徒町",
+                  "御徒町駅",
+                  "台東区上野",
+                  "宝飾問屋街"
+            ]
+      },
+      {
+            "name": "甲府駅",
+            "area": "山梨県甲府市丸の内1丁目",
+            "type": "station",
+            "keywords": [
+                  "こうふ",
+                  "甲府",
+                  "甲府駅",
+                  "山梨県甲府市",
+                  "宝石の街"
+            ]
+      },
+      {
+            "name": "烏丸駅",
+            "area": "京都府京都市下京区四条通烏丸",
+            "type": "station",
+            "keywords": [
+                  "からすま",
+                  "烏丸駅",
+                  "四条烏丸",
+                  "室町",
+                  "呉服問屋街"
+            ]
+      },
+      {
+            "name": "心斎橋駅",
+            "area": "大阪府大阪市中央区心斎橋筋",
+            "type": "station",
+            "keywords": [
+                  "しんさいばし",
+                  "心斎橋駅",
+                  "南船場",
+                  "船場"
+            ]
+      },
+      {
+            "name": "十日町駅",
+            "area": "新潟県十日町市",
+            "type": "station",
+            "keywords": [
+                  "とおかまち",
+                  "十日町",
+                  "十日町駅",
+                  "着物産地"
+            ]
+      },
+      {
+            "name": "東京駅",
+            "area": "東京都千代田区丸の内",
+            "type": "station",
+            "keywords": [
+                  "とうきょうえき",
+                  "丸の内",
+                  "八重洲",
+                  "新幹線"
+            ]
+      },
+      {
+            "name": "品川駅",
+            "area": "東京都港区高輪",
+            "type": "station",
+            "keywords": [
+                  "しながわえき",
+                  "港南口",
+                  "高輪口",
+                  "東海道新幹線"
+            ]
+      },
+      {
+            "name": "新宿駅",
+            "area": "東京都新宿区",
+            "type": "station",
+            "keywords": [
+                  "しんじゅくえき",
+                  "西新宿",
+                  "南口"
+            ]
+      },
+      {
+            "name": "渋谷駅",
+            "area": "東京都渋谷区",
+            "type": "station",
+            "keywords": [
+                  "しぶやえき",
+                  "道玄坂"
+            ]
+      },
+      {
+            "name": "池袋駅",
+            "area": "東京都豊島区",
+            "type": "station",
+            "keywords": [
+                  "いけぶくろえき"
+            ]
+      },
+      {
+            "name": "新横浜駅",
+            "area": "神奈川県横浜市港北区",
+            "type": "station",
+            "keywords": [
+                  "しんよこはまえき",
+                  "東海道新幹線"
+            ]
+      },
+      {
+            "name": "横浜駅",
+            "area": "神奈川県横浜市西区",
+            "type": "station",
+            "keywords": [
+                  "よこはまえき"
+            ]
+      },
+      {
+            "name": "大宮駅",
+            "area": "埼玉県さいたま市大宮区",
+            "type": "station",
+            "keywords": [
+                  "おおみやえき"
+            ]
+      },
+      {
+            "name": "名古屋駅",
+            "area": "愛知県名古屋市中村区名駅",
+            "type": "station",
+            "keywords": [
+                  "なごやえき",
+                  "名駅"
+            ]
+      },
+      {
+            "name": "栄駅",
+            "area": "愛知県名古屋市中区栄",
+            "type": "station",
+            "keywords": [
+                  "さかええき",
+                  "栄"
+            ]
+      },
+      {
+            "name": "京都駅",
+            "area": "京都府京都市下京区",
+            "type": "station",
+            "keywords": [
+                  "きょうとえき"
+            ]
+      },
+      {
+            "name": "新大阪駅",
+            "area": "大阪府大阪市淀川区",
+            "type": "station",
+            "keywords": [
+                  "しんおおさかえき"
+            ]
+      },
+      {
+            "name": "大阪駅",
+            "area": "大阪府大阪市北区梅田",
+            "type": "station",
+            "keywords": [
+                  "おおさかえき",
+                  "うめだ",
+                  "梅田"
+            ]
+      },
+      {
+            "name": "なんば駅",
+            "area": "大阪府大阪市中央区難波",
+            "type": "station",
+            "keywords": [
+                  "なんばえき",
+                  "なんば",
+                  "難波"
+            ]
+      },
+      {
+            "name": "三ノ宮駅",
+            "area": "兵庫県神戸市中央区",
+            "type": "station",
+            "keywords": [
+                  "さんのみやえき",
+                  "三宮",
+                  "神戸"
+            ]
+      },
+      {
+            "name": "岡山駅",
+            "area": "岡山県岡山市北区",
+            "type": "station",
+            "keywords": [
+                  "おかやまえき"
+            ]
+      },
+      {
+            "name": "広島駅",
+            "area": "広島県広島市南区",
+            "type": "station",
+            "keywords": [
+                  "ひろしまえき"
+            ]
+      },
+      {
+            "name": "博多駅",
+            "area": "福岡県福岡市博多区",
+            "type": "station",
+            "keywords": [
+                  "はかたえき",
+                  "博多"
+            ]
+      },
+      {
+            "name": "天神駅",
+            "area": "福岡県福岡市中央区天神",
+            "type": "station",
+            "keywords": [
+                  "てんじんえき",
+                  "天神"
+            ]
+      },
+      {
+            "name": "名古屋コンベンションホール",
+            "area": "愛知県名古屋市中村区平池町",
+            "type": "venue",
+            "keywords": [
+                  "なごやこんべんしょんほーる",
+                  "名古屋コンベンションセンター",
+                  "ささしまライブ",
+                  "グローバルゲート"
+            ]
+      },
+      {
+            "name": "名古屋国際会議場",
+            "area": "愛知県名古屋市熱田区熱田西町",
+            "type": "venue",
+            "keywords": [
+                  "なごやこくさいかいぎじょう",
+                  "センチュリーホール",
+                  "国際会議場"
+            ]
+      },
+      {
+            "name": "ウインクあいち",
+            "area": "愛知県名古屋市中村区名駅",
+            "type": "venue",
+            "keywords": [
+                  "ういんくあいち",
+                  "愛知県産業労働センター",
+                  "名駅前"
+            ]
+      },
+      {
+            "name": "ポートメッセなごや",
+            "area": "愛知県名古屋市港区金城ふ頭",
+            "type": "venue",
+            "keywords": [
+                  "ぽーとめっせなごや",
+                  "名古屋市国際展示場"
+            ]
+      },
+      {
+            "name": "吹上ホール",
+            "area": "愛知県名古屋市千種区吹上",
+            "type": "venue",
+            "keywords": [
+                  "ふきあげほーる",
+                  "中小企業振興会館"
+            ]
+      },
+      {
+            "name": "愛知県国際展示場",
+            "area": "愛知県常滑市セントレア",
+            "type": "venue",
+            "keywords": [
+                  "あいちすかいえくすぽ",
+                  "Aichi Sky Expo",
+                  "セントレア"
+            ]
+      },
+      {
+            "name": "東京ビッグサイト",
+            "area": "東京都江東区有明",
+            "type": "venue",
+            "keywords": [
+                  "とうきょうびっぐさいと",
+                  "国際展示場",
+                  "有明"
+            ]
+      },
+      {
+            "name": "東京国際フォーラム",
+            "area": "東京都千代田区丸の内",
+            "type": "venue",
+            "keywords": [
+                  "とうきょうこくさいふぉーらむ",
+                  "国際フォーラム",
+                  "有楽町"
+            ]
+      },
+      {
+            "name": "幕張メッセ",
+            "area": "千葉県千葉市美浜区",
+            "type": "venue",
+            "keywords": [
+                  "まくはりめっせ",
+                  "海浜幕張"
+            ]
+      },
+      {
+            "name": "パシフィコ横浜",
+            "area": "神奈川県横浜市西区みなとみらい",
+            "type": "venue",
+            "keywords": [
+                  "ぱしふぃこよこはま",
+                  "みなとみらい"
+            ]
+      },
+      {
+            "name": "インテックス大阪",
+            "area": "大阪府大阪市住之江区南港",
+            "type": "venue",
+            "keywords": [
+                  "いんてっくすおおさか",
+                  "国際見本市会場"
+            ]
+      },
+      {
+            "name": "グランキューブ大阪",
+            "area": "大阪府大阪市北区中之島",
+            "type": "venue",
+            "keywords": [
+                  "ぐらんきゅーぶおおさか",
+                  "大阪府立国際会議場"
+            ]
+      },
+      {
+            "name": "ホテル阪急インターナショナル",
+            "area": "大阪府大阪市北区茶屋町",
+            "type": "hotel",
+            "keywords": [
+                  "はんきゅういんたーなしょなる",
+                  "阪急",
+                  "梅田"
+            ]
+      },
+      {
+            "name": "ホテルニューオータニ",
+            "area": "東京都千代田区紀尾井町",
+            "type": "hotel",
+            "keywords": [
+                  "にゅーおーたに",
+                  "ニューオータニ",
+                  "赤坂見附"
+            ]
+      },
+      {
+            "name": "ホテルニューオータニ大阪",
+            "area": "大阪府大阪市中央区城見",
+            "type": "hotel",
+            "keywords": [
+                  "にゅーおーたにおおさか",
+                  "ニューオータニ",
+                  "大阪城公園"
+            ]
+      },
+      {
+            "name": "帝国ホテル 東京",
+            "area": "東京都千代田区内幸町",
+            "type": "hotel",
+            "keywords": [
+                  "ていこくほてる",
+                  "帝国ホテル",
+                  "日比谷"
+            ]
+      },
+      {
+            "name": "神戸ポートピアホテル",
+            "area": "兵庫県神戸市中央区港島中町",
+            "type": "hotel",
+            "keywords": [
+                  "ぽーとぴあほてる",
+                  "ポートピア",
+                  "三宮"
+            ]
+      },
+      {
+            "name": "リーガロイヤルホテル 大阪",
+            "area": "大阪府大阪市北区中之島",
+            "type": "hotel",
+            "keywords": [
+                  "りーがろいやる",
+                  "リーガロイヤル",
+                  "中之島"
+            ]
+      },
+      {
+            "name": "ヒルトン東京",
+            "area": "東京都新宿区西新宿",
+            "type": "hotel",
+            "keywords": [
+                  "ひるとんとうきょう",
+                  "ヒルトン",
+                  "西新宿"
+            ]
+      },
+      {
+            "name": "セルリアンタワー東急ホテル",
+            "area": "東京都渋谷区桜丘町",
+            "type": "hotel",
+            "keywords": [
+                  "せるりあんたわー",
+                  "セルリアンタワー",
+                  "渋谷"
+            ]
+      },
+      {
+            "name": "京王プラザホテル",
+            "area": "東京都新宿区西新宿",
+            "type": "hotel",
+            "keywords": [
+                  "けいおうぷらざ",
+                  "京王プラザ",
+                  "西新宿"
+            ]
+      },
+      {
+            "name": "名古屋マリオットアソシアホテル",
+            "area": "愛知県名古屋市中村区名駅",
+            "type": "hotel",
+            "keywords": [
+                  "なごやまりおっと",
+                  "マリオット",
+                  "名古屋駅"
+            ]
+      },
+      {
+            "name": "ANAクラウンプラザホテル福岡",
+            "area": "福岡県福岡市博多区博多駅前",
+            "type": "hotel",
+            "keywords": [
+                  "えーえぬえーくらうんぷらざ",
+                  "クラウンプラザ",
+                  "博多駅"
+            ]
+      }
+];
+
+    function getCategoryBadge(type) {
+      if (type === "hotel") {
+        return `<span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-indigo-200 shrink-0"><i class="fa-solid fa-hotel mr-1"></i>ホテル</span>`;
+      } else if (type === "venue") {
+        return `<span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-200 shrink-0"><i class="fa-solid fa-landmark mr-1"></i>会場</span>`;
+      } else if (type === "jewelry") {
+        return `<span class="bg-amber-50 text-amber-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-200 shrink-0"><i class="fa-solid fa-gem mr-1"></i>宝飾・問屋</span>`;
+      } else if (type === "kimono") {
+        return `<span class="bg-rose-50 text-rose-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-rose-200 shrink-0"><i class="fa-solid fa-vest-patches mr-1"></i>呉服・和装</span>`;
+      } else if (type === "dept") {
+        return `<span class="bg-purple-50 text-purple-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-purple-200 shrink-0"><i class="fa-solid fa-store mr-1"></i>百貨店</span>`;
+      } else {
+        return `<span class="bg-blue-50 text-blue-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-200 shrink-0"><i class="fa-solid fa-train-subway mr-1"></i>主要駅・空港</span>`;
+      }
+    }
+
+    function handleDestFocus(val) {
+      if (!val || val.trim().length === 0) {
+        // Show recommended top destinations
+        const topPicks = [
+          POPULAR_DESTINATIONS.find(d => d.name.includes("御徒町")),
+          POPULAR_DESTINATIONS.find(d => d.name.includes("京都 室町")),
+          POPULAR_DESTINATIONS.find(d => d.name.includes("甲府")),
+          POPULAR_DESTINATIONS.find(d => d.name.includes("名古屋コンベンション")),
+          POPULAR_DESTINATIONS.find(d => d.name.includes("日本橋三越")),
+          POPULAR_DESTINATIONS.find(d => d.name.includes("東京駅")),
+          POPULAR_DESTINATIONS.find(d => d.name.includes("新大阪駅")),
+          POPULAR_DESTINATIONS.find(d => d.name.includes("名古屋駅")),
+          POPULAR_DESTINATIONS.find(d => d.name.includes("博多駅"))
+        ].filter(Boolean);
+        renderSuggestions(topPicks, "おすすめ・人気目的地");
+      } else {
+        handleDestInput(val);
+      }
+    }
+
+    function handleDestInput(val) {
+      const rawQ = (val || "").trim();
+      const q = rawQ.toLowerCase();
+      if (!q) {
+        handleDestFocus("");
+        return;
+      }
+
+      // 「センター」と「ホール」などの呼称ゆれを柔軟に吸収
+      const qNorm1 = q.replace(/センター/g, "ホール");
+      const qNorm2 = q.replace(/ホール/g, "センター");
+      const tokens = q.split(/[\s　・、,]+/).filter(t => t.length > 0);
+
+      const matches = POPULAR_DESTINATIONS.filter(item => {
+        const itemText = (item.name + " " + item.area + " " + (item.keywords ? item.keywords.join(" ") : "")).toLowerCase();
+        
+        // 1. 完全部分一致または表記ゆれ一致
+        if (itemText.includes(q) || itemText.includes(qNorm1) || itemText.includes(qNorm2)) return true;
+
+        // 2. 複数トークンの全一致（例: 「名古屋」「コンベンション」）
+        if (tokens.length > 1 && tokens.every(tok => itemText.includes(tok))) return true;
+
+        // 3. 4文字以上の複合語分割マッチ（分割パーツが2文字以上の場合のみ）
+        if (q.length >= 4) {
+          const part1 = q.slice(0, Math.ceil(q.length / 2));
+          const part2 = q.slice(Math.ceil(q.length / 2));
+          if (part1.length >= 2 && part2.length >= 2 && itemText.includes(part1) && itemText.includes(part2)) return true;
+        }
+
+        return false;
+      });
+
+      renderSuggestions(matches, `「${rawQ}」の候補 (${matches.length}件)`, rawQ);
+    }
+
+    function renderSuggestions(list, headerTitle, queryVal = "") {
+      const box = document.getElementById("dest-suggestions");
+      if (!box) return;
+
+      const safeVal = (queryVal || "").replace(/'/g, "\\'");
+
+      if (!list || list.length === 0) {
+        box.innerHTML = `
+          <div class="p-2.5">
+            <button type="button" onclick="selectSuggestion('${safeVal}')"
+                    class="w-full text-left p-2.5 bg-indigo-50/70 hover:bg-indigo-100/80 border border-indigo-200 rounded-lg transition group">
+              <div class="text-xs font-bold text-indigo-700 flex items-center">
+                <i class="fa-solid fa-location-crosshairs mr-1.5"></i>
+                <span>「${escapeHtml(queryVal)}」を目的地に指定する</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5">※候補辞書にない名称でも、国土地理院・地図データから自動測位されます</p>
+            </button>
+          </div>
+        `;
+        box.classList.remove("hidden");
+        return;
+      }
+
+      let html = `<div class="bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-slate-500 flex items-center justify-between border-b border-slate-100">
+        <span>${escapeHtml(headerTitle)}</span>
+        <span class="text-[10px] text-slate-400 font-normal">タップで確定</span>
+      </div>`;
+
+      list.slice(0, 8).forEach(item => {
+        html += `
+          <button type="button" onclick="selectSuggestion('${item.name.replace(/'/g, "\\'")}')"
+                  class="w-full text-left px-3 py-2.5 hover:bg-indigo-50/70 transition flex items-center justify-between group">
+            <div class="pr-2 min-w-0">
+              <div class="text-xs font-bold text-slate-800 group-hover:text-indigo-700 truncate">
+                ${item.name}
+              </div>
+              <div class="text-[11px] text-slate-400 truncate">
+                ${item.area}
+              </div>
+            </div>
+            ${getCategoryBadge(item.type)}
+          </button>
+        `;
+      });
+
+      // 住所直接入力または自由入力の確定ボタン
+      if (queryVal && queryVal.trim().length > 0) {
+        const isLikelyAddress = /[都道府県市区町村0-9０-９-]/.test(queryVal);
+        html += `
+          <div class="p-2 bg-indigo-50/40 border-t border-slate-100">
+            <button type="button" onclick="selectSuggestion('${safeVal}')"
+                    class="w-full text-left p-2 hover:bg-indigo-100/60 rounded-lg text-xs font-bold transition flex items-center justify-between group">
+              <div class="flex items-center space-x-2 min-w-0">
+                <i class="fa-solid ${isLikelyAddress ? "fa-map-location-dot text-emerald-600" : "fa-location-crosshairs text-indigo-600"} text-sm shrink-0"></i>
+                <span class="truncate text-slate-800">
+                  「${escapeHtml(queryVal)}」を${isLikelyAddress ? "住所" : "目的地"}として指定
+                </span>
+              </div>
+              <span class="${isLikelyAddress ? "bg-emerald-600" : "bg-indigo-600"} text-white text-[10px] px-2 py-0.5 rounded shrink-0 shadow-sm">
+                ${isLikelyAddress ? "住所直接検索" : "直接指定"}
+              </span>
+            </button>
+          </div>
+        `;
+      }
+
+      box.innerHTML = html;
+      box.classList.remove("hidden");
+    }
+
+    function selectSuggestion(name) {
+      const input = document.getElementById("input-dest");
+      if (input) {
+        input.value = name;
+      }
+      closeSuggestions();
+
+      // If management name is empty, auto-suggest
+      const nameInput = document.getElementById("input-name");
+      if (nameInput && !nameInput.value.trim()) {
+        const cleanName = name.replace(/（.*?）/g, "").replace(/\(.*?\)/g, "");
+        nameInput.value = `${cleanName} 出張`;
+      }
+    }
+
+    function closeSuggestions() {
+      const box = document.getElementById("dest-suggestions");
+      if (box) box.classList.add("hidden");
+    }
+
+    // Close suggestions dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      const wrapper = document.getElementById("dest-field-wrapper");
+      if (wrapper && !wrapper.contains(e.target)) {
+        closeSuggestions();
+      }
+    });
+
     window.addEventListener("DOMContentLoaded", () => loadData());
   </script>
 </body>

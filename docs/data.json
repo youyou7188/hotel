@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-28 10:13:30",
+  "generated_at": "2026-09-28 12:59:35",
   "trips": [
     {
       "id": "trip-tokyo-20261015",
@@ -24,6 +24,7 @@
           "hotel_id": "demo_3",
           "hotel_name": "アパホテル＆リゾート東京駅駅前",
           "price": 8900,
+          "price_is_total": false,
           "walk_minutes": 3,
           "review_rate": 4.0,
           "agent": "楽天トラベル",
@@ -35,6 +36,7 @@
             "露天風呂付大浴場"
           ],
           "rank": 1,
+          "total_price": 8900,
           "previous_price": 8900,
           "price_diff": 0,
           "cheaper_than_booked": true,
@@ -44,6 +46,7 @@
           "hotel_id": "demo_1",
           "hotel_name": "スーパーホテルPremier東京駅八重洲口",
           "price": 9500,
+          "price_is_total": false,
           "walk_minutes": 4,
           "review_rate": 4.3,
           "agent": "楽天トラベル",
@@ -56,6 +59,7 @@
             "朝食無料"
           ],
           "rank": 2,
+          "total_price": 9500,
           "previous_price": 9500,
           "price_diff": 0,
           "cheaper_than_booked": true,
@@ -65,6 +69,7 @@
           "hotel_id": "demo_2",
           "hotel_name": "京王プレッソイン東京駅中央通り",
           "price": 10800,
+          "price_is_total": false,
           "walk_minutes": 6,
           "review_rate": 4.1,
           "agent": "じゃらん",
@@ -76,6 +81,7 @@
             "軽朝食付"
           ],
           "rank": 3,
+          "total_price": 10800,
           "previous_price": 10800,
           "price_diff": 0,
           "cheaper_than_booked": true,
@@ -106,6 +112,7 @@
           "hotel_id": "demo_3",
           "hotel_name": "アパホテル＆リゾート博多駅駅前",
           "price": 8900,
+          "price_is_total": false,
           "walk_minutes": 3,
           "review_rate": 4.0,
           "agent": "楽天トラベル",
@@ -117,6 +124,7 @@
             "露天風呂付大浴場"
           ],
           "rank": 1,
+          "total_price": 8900,
           "previous_price": 8900,
           "price_diff": 0,
           "cheaper_than_booked": false,
@@ -126,6 +134,7 @@
           "hotel_id": "demo_1",
           "hotel_name": "スーパーホテルPremier博多駅八重洲口",
           "price": 9500,
+          "price_is_total": false,
           "walk_minutes": 4,
           "review_rate": 4.3,
           "agent": "楽天トラベル",
@@ -138,6 +147,7 @@
             "朝食無料"
           ],
           "rank": 2,
+          "total_price": 9500,
           "previous_price": 9500,
           "price_diff": 0,
           "cheaper_than_booked": false,
@@ -147,6 +157,7 @@
           "hotel_id": "demo_2",
           "hotel_name": "京王プレッソイン博多駅中央通り",
           "price": 10800,
+          "price_is_total": false,
           "walk_minutes": 6,
           "review_rate": 4.1,
           "agent": "じゃらん",
@@ -158,6 +169,7 @@
             "軽朝食付"
           ],
           "rank": 3,
+          "total_price": 10800,
           "previous_price": 10800,
           "price_diff": 0,
           "cheaper_than_booked": false,
@@ -167,6 +179,7 @@
           "hotel_id": "demo_4",
           "hotel_name": "ダイワロイネットホテル博多駅",
           "price": 12200,
+          "price_is_total": false,
           "walk_minutes": 7,
           "review_rate": 4.2,
           "agent": "じゃらん",
@@ -178,6 +191,7 @@
             "広々デスク"
           ],
           "rank": 4,
+          "total_price": 12200,
           "previous_price": 12200,
           "price_diff": 0,
           "cheaper_than_booked": false,
@@ -187,6 +201,7 @@
           "hotel_id": "demo_5",
           "hotel_name": "三井ガーデンホテル博多駅前",
           "price": 13800,
+          "price_is_total": false,
           "walk_minutes": 5,
           "review_rate": 4.4,
           "agent": "楽天トラベル",
@@ -199,6 +214,7 @@
             "デザイナーズ"
           ],
           "rank": 5,
+          "total_price": 13800,
           "previous_price": 13800,
           "price_diff": 0,
           "cheaper_than_booked": false,
