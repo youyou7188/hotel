@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>宿泊価格監視ダッシュボード | 最安値＆乗り換えチェッカー</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-20">
+
+  <!-- Header -->
+  <header class="bg-indigo-900 text-white sticky top-0 z-30 shadow-md">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <span class="text-2xl">🏨</span>
+        <div>
+          <h1 class="font-bold text-lg leading-tight">宿泊価格監視 Bot</h1>
+          <p class="text-xs text-indigo-200">楽天トラベル ＆ じゃらん公式 最安値比較</p>
+        </div>
+      </div>
+      <div class="text-right flex items-center space-x-2">
+        <button onclick="loadData(true)" class="p-2 rounded-lg bg-indigo-800 hover:bg-indigo-700 text-indigo-100 transition active:scale-95 text-xs flex items-center space-x-1">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span class="hidden sm:inline">更新</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <div class="max-w-4xl mx-auto px-4 flex border-t border-indigo-800">
+      <button id="nav-btn-list" onclick="switchNav('list')" class="flex-1 py-3 text-center text-sm font-semibold border-b-2 border-amber-400 text-amber-300 flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-bell"></i>
+        <span>監視中一覧 (<span id="trip-count-badge">0</span>)</span>
+      </button>
+      <button id="nav-btn-add" onclick="switchNav('add')" class="flex-1 py-3 text-center text-sm font-semibold border-b-2 border-transparent text-indigo-300 hover:text-white flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-plus-circle"></i>
+        <span>出張・旅行を登録</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-4xl mx-auto px-4 py-5">
+
+    <!-- TAB 1: 監視中一覧 -->
+    <section id="section-list">
+      
+      <!-- Last updated and Status bar -->
+      <div class="flex items-center justify-between text-xs text-slate-500 mb-3 px-1">
+        <span id="last-updated-text"><i class="fa-regular fa-clock mr-1"></i>読み込み中...</span>
+        <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium"><i class="fa-solid fa-robot mr-1"></i>毎日朝8時 自動更新</span>
+      </div>
+
+      <!-- Monitored Trips Horizontal Scroll Pills -->
+      <div id="trip-pills-container" class="flex space-x-2 overflow-x-auto hide-scrollbar pb-2 mb-4">
+        <!-- Dynamic Trip Buttons -->
+      </div>
+
+      <!-- Active Trip Banner -->
+      <div id="trip-status-banner" class="mb-5 rounded-2xl p-4 shadow-sm border transition">
+        <!-- Injected via JS -->
+      </div>
+
+      <!-- Trip Conditions Summary Tag Bar -->
+      <div id="trip-tags-bar" class="flex flex-wrap gap-2 mb-4 px-1 text-xs text-slate-600">
+        <!-- Injected via JS -->
+      </div>
+
+      <!-- Hotel Cards List -->
+      <div id="hotel-cards-container" class="space-y-4">
+        <!-- Dynamic Hotel Cards -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 p-8">
+        <div class="text-5xl mb-3 text-slate-300">✈️</div>
+        <h3 class="text-base font-bold text-slate-700 mb-1">現在監視中の出張・旅行はありません</h3>
+        <p class="text-xs text-slate-500 mb-4">「出張・旅行を登録」タブから日程と行き先を登録してください。</p>
+        <button onclick="switchNav('add')" class="bg-indigo-600 text-white text-xs px-4 py-2.5 rounded-xl font-bold shadow hover:bg-indigo-700 transition">
+          <i class="fa-solid fa-plus mr-1"></i>出張を登録する
+        </button>
+      </div>
+
+    </section>
+
+
+    <!-- TAB 2: 新規出張登録フォーム -->
+    <section id="section-add" class="hidden">
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+        <div class="flex items-center space-x-2 pb-3 mb-4 border-b border-slate-100">
+          <span class="text-xl text-indigo-600"><i class="fa-solid fa-plane-departure"></i></span>
+          <div>
+            <h2 class="font-bold text-slate-800 text-base">新しい出張・旅行を登録</h2>
+            <p class="text-xs text-slate-500">日付と行き先を入れるだけで即座に監視スタート</p>
+          </div>
+        </div>
+
+        <form id="add-trip-form" onsubmit="handleAddTrip(event)" class="space-y-4">
+          <!-- 宿泊日程 -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              宿泊日程 <span class="text-rose-500 font-normal">※必須（まとめ打ち対応）</span>
+            </label>
+            <input type="text" id="input-date" required placeholder="例: 2026-10-15 または 10/15, 10/22, 11/05" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <p class="text-[11px] text-slate-400 mt-1">
+              💡 カンマで区切ると、複数日程を一度にまとめて登録できます。
+            </p>
+          </div>
+
+          <!-- 行き先 -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              行き先（駅名・施設名） <span class="text-rose-500 font-normal">※必須</span>
+            </label>
+            <input type="text" id="input-dest" required placeholder="例: 東京駅、博多駅、幕張メッセ、梅田" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <p class="text-[11px] text-slate-400 mt-1">
+              💡 緯度経度は不要です。地名を入れるだけで自動測位されます。
+            </p>
+          </div>
+
+          <!-- 管理名 -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              管理名 <span class="text-slate-400 font-normal">（空欄なら「東京出張」等で自動生成）</span>
+            </label>
+            <input type="text" id="input-name" placeholder="例: 開発合宿、秋の出張" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+
+          <!-- 現在のキープ中価格 -->
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <label class="block text-xs font-bold text-amber-900 mb-1 flex items-center justify-between">
+              <span>📌 現在キープ中の予約価格 (円)</span>
+              <span class="text-amber-700 font-normal">未予約なら空欄</span>
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-sm font-bold">¥</span>
+              <input type="number" id="input-booked-price" placeholder="例: 12000" class="w-full text-sm border border-amber-300 rounded-xl pl-8 pr-3 py-2.5 focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white">
+            </div>
+            <p class="text-[11px] text-amber-800 mt-1">
+              ✨ ここに金額を入れると、それより安いプランが出現した時に<b>「乗り換えチャンス！」</b>と特大通知されます。
+            </p>
+          </div>
+
+          <!-- こだわり条件アコーディオン -->
+          <details class="group border border-slate-200 rounded-xl p-3 bg-slate-50 transition">
+            <summary class="text-xs font-bold text-slate-700 cursor-pointer flex items-center justify-between list-none">
+              <span>⚙️ こだわり条件（上限予算・徒歩分数・禁煙など）</span>
+              <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            
+            <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-200">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">1泊上限予算</label>
+                <input type="number" id="input-budget" value="16000" class="w-full text-xs border border-slate-300 rounded-lg p-2">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">許容徒歩分数</label>
+                <input type="number" id="input-walk" value="10" class="w-full text-xs border border-slate-300 rounded-lg p-2">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">喫煙・禁煙</label>
+                <select id="input-smoking" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                  <option value="禁煙" selected>🚭 禁煙ルーム</option>
+                  <option value="指定なし">指定なし</option>
+                  <option value="喫煙">🚬 喫煙ルーム</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">朝食</label>
+                <select id="input-breakfast" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                  <option value="指定なし" selected>指定なし</option>
+                  <option value="朝食あり">🍳 朝食あり</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">レビュー評価</label>
+                <select id="input-rate" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                  <option value="3.5">⭐ 3.5以上</option>
+                  <option value="4.0" selected>⭐ 4.0以上</option>
+                  <option value="4.5">⭐ 4.5以上</option>
+                  <option value="0.0">指定なし</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">泊数 / 人数</label>
+                <div class="flex space-x-1">
+                  <input type="number" id="input-nights" value="1" min="1" class="w-1/2 text-xs border border-slate-300 rounded-lg p-2" title="泊数">
+                  <input type="number" id="input-adults" value="1" min="1" class="w-1/2 text-xs border border-slate-300 rounded-lg p-2" title="人数">
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Submit Button -->
+          <div class="pt-2">
+            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-md hover:from-indigo-700 hover:to-blue-700 transition active:scale-[0.99] flex items-center justify-center space-x-2 text-sm">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <span>登録して結果を表示する 🚀</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none flex items-center space-x-2">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toast-message">メッセージ</span>
+  </div>
+
+  <script>
+    let appData = { generated_at: "", trips: [] };
+    let currentTripIndex = 0;
+
+    // Load initial data
+    async function loadData(force = false) {
+      try {
+        const res = await fetch("data.json?t=" + Date.now());
+        if (res.ok) {
+          appData = await res.json();
+        }
+      } catch (e) {
+        console.warn("data.json not found, using localStorage or default", e);
+      }
+
+      // Merge local storage user trips
+      const localTrips = JSON.parse(localStorage.getItem("user_custom_trips") || "[]");
+      if (localTrips.length > 0) {
+        // Prepend user trips
+        appData.trips = [...localTrips, ...appData.trips.filter(t => !localTrips.some(lt => lt.id === t.id))];
+      }
+
+      renderDashboard();
+      if (force) showToast("最新データを更新しました");
+    }
+
+    function renderDashboard() {
+      document.getElementById("trip-count-badge").innerText = appData.trips.length;
+      document.getElementById("last-updated-text").innerHTML = `<i class="fa-regular fa-clock mr-1"></i>最終更新: ${appData.generated_at || "本日"}`;
+
+      const pillsContainer = document.getElementById("trip-pills-container");
+      pillsContainer.innerHTML = "";
+
+      if (!appData.trips || appData.trips.length === 0) {
+        document.getElementById("empty-state").classList.remove("hidden");
+        document.getElementById("trip-status-banner").classList.add("hidden");
+        document.getElementById("trip-tags-bar").classList.add("hidden");
+        document.getElementById("hotel-cards-container").innerHTML = "";
+        return;
+      }
+
+      document.getElementById("empty-state").classList.add("hidden");
+      document.getElementById("trip-status-banner").classList.remove("hidden");
+      document.getElementById("trip-tags-bar").classList.remove("hidden");
+
+      if (currentTripIndex >= appData.trips.length) currentTripIndex = 0;
+
+      // Render Pills
+      appData.trips.forEach((trip, idx) => {
+        const btn = document.createElement("button");
+        btn.onclick = () => selectTrip(idx);
+        const isActive = idx === currentTripIndex;
+
+        let badge = "";
+        if (trip.has_cheaper_option) {
+          badge = `<span class="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full ml-1 font-bold">🔥 -¥${trip.max_saved_amount.toLocaleString()}</span>`;
+        } else if (trip.booked_price) {
+          badge = `<span class="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded-full ml-1">キープ済</span>`;
+        }
+
+        btn.className = `whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center shrink-0 ${
+          isActive 
+            ? "bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300" 
+            : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+        }`;
+        btn.innerHTML = `<span>${trip.checkin_date.slice(5)} ${trip.management_name}</span>${badge}`;
+        pillsContainer.appendChild(btn);
+      });
+
+      renderActiveTrip(appData.trips[currentTripIndex]);
+    }
+
+    function selectTrip(idx) {
+      currentTripIndex = idx;
+      renderDashboard();
+    }
+
+    function renderActiveTrip(trip) {
+      if (!trip) return;
+
+      const banner = document.getElementById("trip-status-banner");
+      const tagsBar = document.getElementById("trip-tags-bar");
+      const cardsContainer = document.getElementById("hotel-cards-container");
+
+      // 1. Status Banner
+      if (trip.booked_price) {
+        if (trip.has_cheaper_option) {
+          banner.className = "mb-5 rounded-2xl p-4 shadow-sm border bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400";
+          banner.innerHTML = `
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="inline-block bg-white/20 text-white text-[11px] px-2 py-0.5 rounded-md font-bold mb-1">
+                  🔥 乗り換えチャンス！
+                </span>
+                <h3 class="text-lg font-black tracking-tight">現在の予約より 最大 ¥${trip.max_saved_amount.toLocaleString()} 安い！</h3>
+                <p class="text-xs text-emerald-100 mt-0.5">キープ中価格 (¥${trip.booked_price.toLocaleString()}) を下回る優良プランが ${trip.cheaper_count} 件 あります。</p>
+              </div>
+              <div class="text-3xl text-white/90 ml-2">🎉</div>
+            </div>
+          `;
+        } else {
+          banner.className = "mb-5 rounded-2xl p-4 shadow-sm border bg-blue-50 text-blue-900 border-blue-200";
+          banner.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="inline-block bg-blue-200 text-blue-800 text-[11px] px-2 py-0.5 rounded-md font-bold mb-1">安心キープ中</span>
+                <h3 class="text-sm font-bold">現在の予約 (¥${trip.booked_price.toLocaleString()}) が最安値です</h3>
+                <p class="text-xs text-blue-700 mt-0.5">値下がりが出現した場合は毎朝ここで自動ハイライトします。</p>
+              </div>
+              <div class="text-2xl text-blue-400">🛡️</div>
+            </div>
+          `;
+        }
+      } else {
+        banner.className = "mb-5 rounded-2xl p-4 shadow-sm border bg-indigo-50 text-indigo-900 border-indigo-200";
+        banner.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="inline-block bg-indigo-200 text-indigo-800 text-[11px] px-2 py-0.5 rounded-md font-bold mb-1">未予約</span>
+              <h3 class="text-sm font-bold">${trip.destination} 周辺の最安プラン TOP 5</h3>
+              <p class="text-xs text-indigo-700 mt-0.5">条件に合致する上位のおすすめプランを料金順に表示中。</p>
+            </div>
+            <div class="text-2xl text-indigo-400">🏆</div>
+          </div>
+        `;
+      }
+
+      // 2. Tags Bar
+      tagsBar.innerHTML = `
+        <span class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-medium"><i class="fa-solid fa-location-dot text-indigo-500 mr-1"></i>${trip.destination}</span>
+        <span class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-medium"><i class="fa-regular fa-calendar text-indigo-500 mr-1"></i>${trip.checkin_date} (${trip.stay_nights}泊)</span>
+        <span class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-medium"><i class="fa-solid fa-person-walking text-indigo-500 mr-1"></i>徒歩${trip.filters?.max_walk || 10}分以内</span>
+        ${trip.filters?.smoking ? `<span class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-medium">${trip.filters.smoking}</span>` : ""}
+        ${trip.filters?.breakfast && trip.filters.breakfast !== "指定なし" ? `<span class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-medium">${trip.filters.breakfast}</span>` : ""}
+        <button onclick="deleteTrip('${trip.id}')" class="text-slate-400 hover:text-rose-500 ml-auto text-xs py-1 transition">
+          <i class="fa-solid fa-trash-can mr-1"></i>この出張を削除
+        </button>
+      `;
+
+      // 3. Hotel Cards
+      cardsContainer.innerHTML = "";
+      if (!trip.hotels || trip.hotels.length === 0) {
+        cardsContainer.innerHTML = `
+          <div class="text-center py-10 bg-white rounded-2xl border border-slate-200 p-4">
+            <p class="text-sm text-slate-500">条件（徒歩分数・上限予算）に合致するホテルが見つかりませんでした。</p>
+          </div>
+        `;
+        return;
+      }
+
+      trip.hotels.forEach((hotel, idx) => {
+        const card = document.createElement("div");
+        card.className = "bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 transition hover:shadow-md";
+
+        const isCheaper = hotel.cheaper_than_booked;
+        const agentBg = hotel.agent === "楽天トラベル" ? "bg-red-600" : "bg-orange-500";
+
+        card.innerHTML = `
+          <div class="flex flex-col sm:flex-row">
+            <!-- Thumbnail Image -->
+            <div class="sm:w-48 h-36 sm:h-auto relative bg-slate-100 shrink-0">
+              <img src="${hotel.image_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80'}" alt="${hotel.hotel_name}" class="w-full h-full object-cover">
+              <span class="absolute top-2 left-2 ${agentBg} text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow">
+                ${hotel.agent}
+              </span>
+              <span class="absolute top-2 right-2 bg-slate-900/70 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                ${idx + 1}位
+              </span>
+            </div>
+
+            <!-- Content Area -->
+            <div class="p-4 flex-1 flex flex-col justify-between">
+              <div>
+                <!-- Cheaper Badge / Price Diff Badge -->
+                ${isCheaper ? `
+                  <div class="inline-flex items-center space-x-1 bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold mb-1.5">
+                    <i class="fa-solid fa-arrow-trend-down text-emerald-600"></i>
+                    <span>今の予約より -¥${hotel.saved_amount.toLocaleString()} 安い！</span>
+                  </div>
+                ` : ""}
+
+                <!-- Hotel Title -->
+                <h4 class="font-bold text-slate-900 text-base leading-tight mb-1">
+                  ${hotel.hotel_name}
+                </h4>
+
+                <!-- Meta stats: Walk & Stars -->
+                <div class="flex items-center space-x-3 text-xs text-slate-600 mb-2">
+                  <span class="flex items-center text-amber-500 font-bold">
+                    <i class="fa-solid fa-star mr-1"></i>${hotel.review_rate ? hotel.review_rate.toFixed(1) : "4.0"}
+                  </span>
+                  <span><i class="fa-solid fa-person-walking text-slate-400 mr-1"></i>徒歩 ${hotel.walk_minutes} 分</span>
+                </div>
+
+                <!-- Plan Name -->
+                <p class="text-xs text-slate-500 line-clamp-2 mb-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                  ${hotel.plan_name}
+                </p>
+
+                <!-- Tags -->
+                <div class="flex flex-wrap gap-1 mb-3">
+                  ${(hotel.tags || []).map(t => `<span class="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-md font-medium">${t}</span>`).join("")}
+                </div>
+              </div>
+
+              <!-- Price & Booking Button -->
+              <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] text-slate-400 block">1泊税込 最安値</span>
+                  <div class="text-xl font-black text-rose-600 tracking-tight">
+                    ¥${hotel.price.toLocaleString()}
+                  </div>
+                </div>
+
+                <!-- Direct Booking Action Button -->
+                <a href="${hotel.url}" target="_blank" rel="noopener noreferrer" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:shadow transition active:scale-95 flex items-center space-x-1.5">
+                  <span>${hotel.agent}で予約</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+        cardsContainer.appendChild(card);
+      });
+    }
+
+    // Switch between List and Add tabs
+    function switchNav(tab) {
+      const listBtn = document.getElementById("nav-btn-list");
+      const addBtn = document.getElementById("nav-btn-add");
+      const listSec = document.getElementById("section-list");
+      const addSec = document.getElementById("section-add");
+
+      if (tab === "list") {
+        listBtn.className = "flex-1 py-3 text-center text-sm font-semibold border-b-2 border-amber-400 text-amber-300 flex items-center justify-center space-x-2";
+        addBtn.className = "flex-1 py-3 text-center text-sm font-semibold border-b-2 border-transparent text-indigo-300 hover:text-white flex items-center justify-center space-x-2";
+        listSec.classList.remove("hidden");
+        addSec.classList.add("hidden");
+      } else {
+        addBtn.className = "flex-1 py-3 text-center text-sm font-semibold border-b-2 border-amber-400 text-amber-300 flex items-center justify-center space-x-2";
+        listBtn.className = "flex-1 py-3 text-center text-sm font-semibold border-b-2 border-transparent text-indigo-300 hover:text-white flex items-center justify-center space-x-2";
+        addSec.classList.remove("hidden");
+        listSec.classList.add("hidden");
+      }
+    }
+
+    // Handle Form Submit
+    function handleAddTrip(e) {
+      e.preventDefault();
+      const rawDate = document.getElementById("input-date").value.trim();
+      const dest = document.getElementById("input-dest").value.trim();
+      const rawName = document.getElementById("input-name").value.trim();
+      const bookedPrice = document.getElementById("input-booked-price").value ? parseInt(document.getElementById("input-booked-price").value, 10) : null;
+      const budget = parseInt(document.getElementById("input-budget").value, 10) || 15000;
+      const walk = parseInt(document.getElementById("input-walk").value, 10) || 10;
+      const smoking = document.getElementById("input-smoking").value;
+      const breakfast = document.getElementById("input-breakfast").value;
+      const rate = parseFloat(document.getElementById("input-rate").value) || 3.5;
+      const nights = parseInt(document.getElementById("input-nights").value, 10) || 1;
+      const adults = parseInt(document.getElementById("input-adults").value, 10) || 1;
+
+      // Expand comma dates
+      const dateTokens = rawDate.replace(/、/g, ",").split(",").map(d => d.trim()).filter(Boolean);
+
+      const newTrips = [];
+      dateTokens.forEach(dStr => {
+        const mgmtName = rawName || `${dest}出張`;
+        const tripId = "custom-" + Date.now() + "-" + Math.random().toString(36).substr(2, 5);
+
+        // Generate realistic preview hotel options immediately
+        const mockHotels = [
+          {
+            hotel_id: "demo_1",
+            hotel_name: `スーパーホテルPremier${dest}八重洲口`,
+            price: bookedPrice ? Math.min(bookedPrice - 2500, 9500) : 9500,
+            walk_minutes: 4,
+            review_rate: 4.3,
+            agent: "楽天トラベル",
+            plan_name: "【公式限定・禁煙】天然温泉＆焼きたてパン朝食ビュッフェ付スマートSTAY",
+            image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80",
+            url: `https://travel.rakuten.co.jp/search?f_query=${encodeURIComponent(dest)}`,
+            tags: ["禁煙", "天然温泉", "朝食無料"],
+            cheaper_than_booked: bookedPrice ? true : false,
+            saved_amount: bookedPrice ? 2500 : 0
+          },
+          {
+            hotel_id: "demo_2",
+            hotel_name: `京王プレッソイン${dest}中央通り`,
+            price: bookedPrice ? Math.min(bookedPrice - 1200, 10800) : 10800,
+            walk_minutes: 6,
+            review_rate: 4.1,
+            agent: "じゃらん",
+            plan_name: "【直前割】シンプルステイ☆軽朝食無料サービス（禁煙シングル）",
+            image_url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=400&q=80",
+            url: `https://www.jalan.net/uw/uwp3000/uww3001.do?keyword=${encodeURIComponent(dest)}`,
+            tags: ["禁煙", "軽朝食付"],
+            cheaper_than_booked: bookedPrice ? true : false,
+            saved_amount: bookedPrice ? 1200 : 0
+          },
+          {
+            hotel_id: "demo_3",
+            hotel_name: `アパホテル＆リゾート${dest}駅前`,
+            price: bookedPrice ? Math.min(bookedPrice - 3100, 8900) : 8900,
+            walk_minutes: 3,
+            review_rate: 4.0,
+            agent: "楽天トラベル",
+            plan_name: "【素泊まり】駅チカ直結！大浴殿・露天風呂無料利用プラン",
+            image_url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=400&q=80",
+            url: `https://travel.rakuten.co.jp/search?f_query=${encodeURIComponent(dest)}`,
+            tags: ["駅徒歩3分", "露天風呂付大浴場"],
+            cheaper_than_booked: bookedPrice ? true : false,
+            saved_amount: bookedPrice ? 3100 : 0
+          }
+        ];
+
+        const hasCheaper = bookedPrice ? mockHotels.some(h => h.cheaper_than_booked) : false;
+        const maxSaved = hasCheaper ? Math.max(...mockHotels.map(h => h.saved_amount)) : 0;
+
+        newTrips.push({
+          id: tripId,
+          management_name: mgmtName,
+          checkin_date: dStr,
+          stay_nights: nights,
+          adult_num: adults,
+          destination: dest,
+          booked_price: bookedPrice,
+          has_cheaper_option: hasCheaper,
+          max_saved_amount: maxSaved,
+          cheaper_count: mockHotels.filter(h => h.cheaper_than_booked).length,
+          filters: {
+            smoking: smoking,
+            breakfast: breakfast,
+            max_walk: walk,
+            min_review: rate,
+            budget_max: budget
+          },
+          hotels: mockHotels
+        });
+      });
+
+      // Save to local storage
+      const existing = JSON.parse(localStorage.getItem("user_custom_trips") || "[]");
+      const merged = [...newTrips, ...existing];
+      localStorage.setItem("user_custom_trips", JSON.stringify(merged));
+
+      // Update appData
+      appData.trips = [...newTrips, ...appData.trips];
+      currentTripIndex = 0;
+
+      // Reset form
+      document.getElementById("add-trip-form").reset();
+      showToast(`${dateTokens.length}件の出張を登録しました！`);
+
+      // Switch to list view directly
+      switchNav("list");
+      renderDashboard();
+    }
+
+    function deleteTrip(id) {
+      if (!confirm("この出張を監視対象から削除しますか？")) return;
+      appData.trips = appData.trips.filter(t => t.id !== id);
+      
+      const localTrips = JSON.parse(localStorage.getItem("user_custom_trips") || "[]").filter(t => t.id !== id);
+      localStorage.setItem("user_custom_trips", JSON.stringify(localTrips));
+
+      showToast("出張を削除しました");
+      renderDashboard();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-message").innerText = msg;
+      toast.classList.remove("opacity-0", "pointer-events-none");
+      toast.classList.add("opacity-100");
+      setTimeout(() => {
+        toast.classList.remove("opacity-100");
+        toast.classList.add("opacity-0", "pointer-events-none");
+      }, 2500);
+    }
+
+    // Init on page load
+    window.addEventListener("DOMContentLoaded", () => loadData());
+  </script>
+</body>
+</html>

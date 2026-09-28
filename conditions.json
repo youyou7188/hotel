@@ -1,0 +1,36 @@
+[
+  {
+    "id": "trip-tokyo-20261015",
+    "management_name": "東京出張",
+    "checkin_date": "2026-10-15",
+    "stay_nights": 1,
+    "adult_num": 1,
+    "destination": "東京駅",
+    "target_lat": 35.6809591,
+    "target_lon": 139.7673068,
+    "max_walk_minutes": 10,
+    "budget_max": 16000,
+    "booked_price": 12000,
+    "smoking": "禁煙",
+    "breakfast": "指定なし",
+    "min_review_rate": 3.8,
+    "status": "監視中"
+  },
+  {
+    "id": "trip-hakata-20261120",
+    "management_name": "博多旅行",
+    "checkin_date": "2026-11-20",
+    "stay_nights": 1,
+    "adult_num": 1,
+    "destination": "博多駅",
+    "target_lat": 33.590355,
+    "target_lon": 130.420682,
+    "max_walk_minutes": 8,
+    "budget_max": 14000,
+    "booked_price": null,
+    "smoking": "禁煙",
+    "breakfast": "朝食あり",
+    "min_review_rate": 4.0,
+    "status": "監視中"
+  }
+]
