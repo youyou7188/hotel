@@ -699,6 +699,9 @@ def save_history(history: Dict[str, Any]) -> None:
         logger.warning(f"履歴保存エラー: {e}")
 
 
+ALLOW_MOCK_DATA = os.environ.get("ALLOW_MOCK_DATA", "false").lower() in ("true", "1")
+
+
 def process_monitoring() -> Dict[str, Any]:
     geo_cache = load_geo_cache()
     conditions = load_conditions(CONDITIONS_FILE, geo_cache)
@@ -730,7 +733,12 @@ def process_monitoring() -> Dict[str, Any]:
             time.sleep(0.5)
 
         if not hotels and not RAKUTEN_APP_ID and not JALAN_API_KEY:
-            hotels = get_mock_hotels(cond)
+            if ALLOW_MOCK_DATA:
+                logger.info(f"[{mgmt}] テスト環境用モックデータを使用します。")
+                hotels = get_mock_hotels(cond)
+            else:
+                logger.info(f"[{mgmt}] APIキーが設定されていないため、検索結果は空(0件)として出力します（デモデータは出力しません）。")
+                hotels = []
 
         matched = []
         nights = max(1, int(cond.get("stay_nights", 1)))

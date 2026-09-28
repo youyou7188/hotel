@@ -163,6 +163,7 @@ class TestHotelMonitorV2(unittest.TestCase):
                 m.RESULT_CSV_FILE = os.path.join(tmpdir, "result.csv")
                 m.HISTORY_FILE = os.path.join(tmpdir, "history.json")
                 m.GEO_CACHE_FILE = os.path.join(tmpdir, ".geo_cache.json")
+                m.ALLOW_MOCK_DATA = True
 
                 web_data = process_monitoring()
                 self.assertIn("generated_at", web_data)

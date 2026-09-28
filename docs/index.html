@@ -338,6 +338,17 @@
     let appData = DEFAULT_DATA;
     let currentTripIndex = 0;
 
+    function clearLocalHistory() {
+      if (!confirm("スマホ・ブラウザ内に保存された過去のテスト登録データを初期化しますか？")) return;
+      try {
+        localStorage.removeItem("user_custom_trips");
+      } catch(e) {}
+      showToast("履歴をリセットしました");
+      closeSettingsModal();
+      loadData(true);
+    }
+
+
     // ==========================================
     // GitHub Actions 遠隔起動 ＆ 進捗トラッキング
     // ==========================================
@@ -488,11 +499,28 @@
 
       let localTrips = [];
       try { localTrips = JSON.parse(localStorage.getItem("user_custom_trips") || "[]"); } catch(e) { console.warn("localStorage parse error", e); }
+      
+      // 過去の古いデモホテル（スーパーホテル等のダミー）を完全自動パージ
+      localTrips = localTrips.map(t => {
+        if (t.hotels) {
+          t.hotels = t.hotels.filter(h => h.hotel_id && !h.hotel_id.startsWith("demo_") && !h.hotel_name.includes("スーパーホテルPremier") && !h.hotel_name.includes("プレッソイン"));
+        }
+        return t;
+      });
+
       if (localTrips.length > 0) {
         const localMap = new Map(localTrips.map(t => [t.id, t]));
-        // Replace or prepend
         const existingRemaining = appData.trips.filter(t => !localMap.has(t.id));
         appData.trips = [...localTrips, ...existingRemaining];
+      }
+
+      // appData 内の古いデモホテルも完全排除
+      if (appData.trips) {
+        appData.trips.forEach(t => {
+          if (t.hotels) {
+            t.hotels = t.hotels.filter(h => h.hotel_id && !h.hotel_id.startsWith("demo_") && !h.hotel_name.includes("スーパーホテルPremier") && !h.hotel_name.includes("プレッソイン"));
+          }
+        });
       }
 
       renderDashboard();
@@ -659,8 +687,16 @@
       cardsContainer.innerHTML = "";
       if (!trip.hotels || trip.hotels.length === 0) {
         cardsContainer.innerHTML = `
-          <div class="text-center py-10 bg-white rounded-xl border border-slate-200 p-4">
-            <p class="text-xs text-slate-500">条件に合致する宿泊施設が見つかりませんでした。</p>
+          <div class="text-center py-8 bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+            <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-lg">
+              <i class="fa-solid fa-hotel"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">条件に合う空室ホテルは現在ありません</p>
+            <p class="text-xs text-slate-400 mt-1 mb-4">楽天・じゃらんの公式最新データを今すぐ取得・巡回できます</p>
+            <button type="button" onclick="handleTriggerSync()" class="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-amber-500 text-white font-bold text-xs rounded-xl shadow-sm hover:opacity-95 transition active:scale-95">
+              <i class="fa-solid fa-bolt text-yellow-200"></i>
+              <span>楽天＆じゃらん公式巡回を実行</span>
+            </button>
           </div>
         `;
         return;
@@ -831,9 +867,6 @@
       const mockHotels = [];
       const hasCheaper = false;
       const maxSaved = 0;
-
-      const hasCheaper = bookedPrice ? mockHotels.some(h => h.cheaper_than_booked) : false;
-      const maxSaved = hasCheaper ? Math.max(...mockHotels.map(h => h.saved_amount)) : 0;
 
       if (editingId) {
         // Edit existing trip
@@ -2436,6 +2469,16 @@
         </a>
       </div>
 
+            <!-- キャッシュ・履歴クリア -->
+      <div class="border-t border-slate-100 pt-3 flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold text-slate-700">ブラウザ履歴のリセット</div>
+          <div class="text-[10px] text-slate-400">過去に保存されたテスト出張やキャッシュを消去します</div>
+        </div>
+        <button type="button" onclick="clearLocalHistory()" class="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-xs border border-rose-200 transition">
+          履歴を初期化
+        </button>
+      </div>
       <div class="flex items-center space-x-2 pt-2 border-t border-slate-100">
         <button type="button" onclick="closeSettingsModal()" class="flex-1 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 font-bold text-xs transition">
           キャンセル
