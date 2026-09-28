@@ -1,17 +1,20 @@
 {
-  "generated_at": "2026-09-28 14:13:25",
+  "generated_at": "2026-09-28 14:36:23",
   "trips": [
     {
       "id": "trip-tokyo-20261015",
       "management_name": "東京出張",
       "checkin_date": "2026-10-15",
       "stay_nights": 1,
+      "adult_num": 1,
       "destination": "東京駅",
+      "target_lat": 35.6809591,
+      "target_lon": 139.7673068,
       "booked_price": 12000,
-      "has_cheaper_option": false,
-      "max_saved_amount": 0,
-      "cheaper_count": 0,
-      "total_matched": 0,
+      "has_cheaper_option": true,
+      "max_saved_amount": 3100,
+      "cheaper_count": 3,
+      "total_matched": 5,
       "filters": {
         "smoking": "禁煙",
         "breakfast": "指定なし",
@@ -19,19 +22,90 @@
         "min_review": 3.8,
         "budget_max": 16000
       },
-      "hotels": []
+      "hotels": [
+        {
+          "hotel_id": "demo_3",
+          "hotel_name": "アパホテル＆リゾート東京駅駅前",
+          "price": 8900,
+          "price_is_total": false,
+          "walk_minutes": 3,
+          "review_rate": 4.0,
+          "agent": "楽天トラベル",
+          "plan_name": "【素泊まり】駅チカ直結！大浴殿・露天風呂無料利用プラン",
+          "image_url": "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=600&q=80",
+          "url": "https://travel.rakuten.co.jp/search?f_query=%E6%9D%B1%E4%BA%AC%E9%A7%85",
+          "tags": [
+            "駅徒歩3分",
+            "露天風呂付大浴場"
+          ],
+          "rank": 1,
+          "total_price": 8900,
+          "previous_price": 8900,
+          "price_diff": 0,
+          "cheaper_than_booked": true,
+          "saved_amount": 3100
+        },
+        {
+          "hotel_id": "demo_1",
+          "hotel_name": "スーパーホテルPremier東京駅八重洲口",
+          "price": 9500,
+          "price_is_total": false,
+          "walk_minutes": 4,
+          "review_rate": 4.3,
+          "agent": "楽天トラベル",
+          "plan_name": "【公式限定・禁煙】天然温泉＆焼きたてパン朝食ビュッフェ付スマートSTAY",
+          "image_url": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
+          "url": "https://travel.rakuten.co.jp/search?f_query=%E6%9D%B1%E4%BA%AC%E9%A7%85",
+          "tags": [
+            "禁煙",
+            "天然温泉",
+            "朝食無料"
+          ],
+          "rank": 2,
+          "total_price": 9500,
+          "previous_price": 9500,
+          "price_diff": 0,
+          "cheaper_than_booked": true,
+          "saved_amount": 2500
+        },
+        {
+          "hotel_id": "demo_2",
+          "hotel_name": "京王プレッソイン東京駅中央通り",
+          "price": 10800,
+          "price_is_total": false,
+          "walk_minutes": 6,
+          "review_rate": 4.1,
+          "agent": "じゃらん",
+          "plan_name": "【直前割】シンプルステイ☆軽朝食無料サービス（禁煙シングル）",
+          "image_url": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80",
+          "url": "https://www.jalan.net/uw/uwp3000/uww3001.do?keyword=%E6%9D%B1%E4%BA%AC%E9%A7%85",
+          "tags": [
+            "禁煙",
+            "軽朝食付"
+          ],
+          "rank": 3,
+          "total_price": 10800,
+          "previous_price": 10800,
+          "price_diff": 0,
+          "cheaper_than_booked": true,
+          "saved_amount": 1200
+        }
+      ]
     },
     {
       "id": "trip-hakata-20261120",
       "management_name": "博多旅行",
       "checkin_date": "2026-11-20",
       "stay_nights": 1,
+      "adult_num": 1,
       "destination": "博多駅",
+      "target_lat": 33.590355,
+      "target_lon": 130.420682,
       "booked_price": null,
       "has_cheaper_option": false,
       "max_saved_amount": 0,
       "cheaper_count": 0,
-      "total_matched": 0,
+      "total_matched": 5,
       "filters": {
         "smoking": "禁煙",
         "breakfast": "朝食あり",
@@ -39,7 +113,120 @@
         "min_review": 4.0,
         "budget_max": 14000
       },
-      "hotels": []
+      "hotels": [
+        {
+          "hotel_id": "demo_3",
+          "hotel_name": "アパホテル＆リゾート博多駅駅前",
+          "price": 8900,
+          "price_is_total": false,
+          "walk_minutes": 3,
+          "review_rate": 4.0,
+          "agent": "楽天トラベル",
+          "plan_name": "【素泊まり】駅チカ直結！大浴殿・露天風呂無料利用プラン",
+          "image_url": "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=600&q=80",
+          "url": "https://travel.rakuten.co.jp/search?f_query=%E5%8D%9A%E5%A4%9A%E9%A7%85",
+          "tags": [
+            "駅徒歩3分",
+            "露天風呂付大浴場"
+          ],
+          "rank": 1,
+          "total_price": 8900,
+          "previous_price": 8900,
+          "price_diff": 0,
+          "cheaper_than_booked": false,
+          "saved_amount": 0
+        },
+        {
+          "hotel_id": "demo_1",
+          "hotel_name": "スーパーホテルPremier博多駅八重洲口",
+          "price": 9500,
+          "price_is_total": false,
+          "walk_minutes": 4,
+          "review_rate": 4.3,
+          "agent": "楽天トラベル",
+          "plan_name": "【公式限定・禁煙】天然温泉＆焼きたてパン朝食ビュッフェ付スマートSTAY",
+          "image_url": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80",
+          "url": "https://travel.rakuten.co.jp/search?f_query=%E5%8D%9A%E5%A4%9A%E9%A7%85",
+          "tags": [
+            "禁煙",
+            "天然温泉",
+            "朝食無料"
+          ],
+          "rank": 2,
+          "total_price": 9500,
+          "previous_price": 9500,
+          "price_diff": 0,
+          "cheaper_than_booked": false,
+          "saved_amount": 0
+        },
+        {
+          "hotel_id": "demo_2",
+          "hotel_name": "京王プレッソイン博多駅中央通り",
+          "price": 10800,
+          "price_is_total": false,
+          "walk_minutes": 6,
+          "review_rate": 4.1,
+          "agent": "じゃらん",
+          "plan_name": "【直前割】シンプルステイ☆軽朝食無料サービス（禁煙シングル）",
+          "image_url": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80",
+          "url": "https://www.jalan.net/uw/uwp3000/uww3001.do?keyword=%E5%8D%9A%E5%A4%9A%E9%A7%85",
+          "tags": [
+            "禁煙",
+            "軽朝食付"
+          ],
+          "rank": 3,
+          "total_price": 10800,
+          "previous_price": 10800,
+          "price_diff": 0,
+          "cheaper_than_booked": false,
+          "saved_amount": 0
+        },
+        {
+          "hotel_id": "demo_4",
+          "hotel_name": "ダイワロイネットホテル博多駅",
+          "price": 12200,
+          "price_is_total": false,
+          "walk_minutes": 7,
+          "review_rate": 4.2,
+          "agent": "じゃらん",
+          "plan_name": "ゆったりワイドデスク＆高速Wi-Fiビジネス応援プラン（禁煙）",
+          "image_url": "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=600&q=80",
+          "url": "https://www.jalan.net/uw/uwp3000/uww3001.do?keyword=%E5%8D%9A%E5%A4%9A%E9%A7%85",
+          "tags": [
+            "禁煙",
+            "広々デスク"
+          ],
+          "rank": 4,
+          "total_price": 12200,
+          "previous_price": 12200,
+          "price_diff": 0,
+          "cheaper_than_booked": false,
+          "saved_amount": 0
+        },
+        {
+          "hotel_id": "demo_5",
+          "hotel_name": "三井ガーデンホテル博多駅前",
+          "price": 13800,
+          "price_is_total": false,
+          "walk_minutes": 5,
+          "review_rate": 4.4,
+          "agent": "楽天トラベル",
+          "plan_name": "洗練のハイグレードシングル【大浴場・快眠ベッド完備】",
+          "image_url": "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80",
+          "url": "https://travel.rakuten.co.jp/search?f_query=%E5%8D%9A%E5%A4%9A%E9%A7%85",
+          "tags": [
+            "禁煙",
+            "大浴場あり",
+            "デザイナーズ"
+          ],
+          "rank": 5,
+          "total_price": 13800,
+          "previous_price": 13800,
+          "price_diff": 0,
+          "cheaper_than_booked": false,
+          "saved_amount": 0
+        }
+      ]
     }
   ]
 }

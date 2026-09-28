@@ -40,6 +40,10 @@
         </div>
       </div>
       <div class="flex items-center space-x-2">
+        <button onclick="openSettingsModal()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition active:scale-95 text-xs flex items-center space-x-1.5 border border-slate-700" title="APIキー設定">
+          <i class="fa-solid fa-gear"></i>
+          <span>API設定</span>
+        </button>
         <button onclick="loadData(true)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition active:scale-95 text-xs flex items-center space-x-1.5 border border-slate-700">
           <i class="fa-solid fa-arrows-rotate"></i>
           <span>更新</span>
@@ -67,6 +71,26 @@
     <!-- TAB 1: 監視中一覧                          -->
     <!-- ========================================== -->
     <section id="section-list">
+      <!-- Action Bar: 今すぐ楽天＆じゃらん一括巡回 -->
+      <div class="mb-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 rounded-xl p-3 text-white flex items-center justify-between shadow-sm border border-slate-700/80">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-400/30">
+            <i class="fa-solid fa-bolt text-sm"></i>
+          </div>
+          <div>
+            <div class="font-bold text-xs flex items-center space-x-1.5">
+              <span>楽天トラベル ＆ じゃらん公式 一括巡回</span>
+              <span class="bg-indigo-500/30 text-indigo-300 text-[10px] px-1.5 py-0.2 rounded font-normal border border-indigo-400/30">毎朝8時自動</span>
+            </div>
+            <div class="text-[11px] text-slate-300 mt-0.5" id="sync-status-text">いつでも即時手動チェックが可能です</div>
+          </div>
+        </div>
+        <button id="btn-trigger-workflow" onclick="handleTriggerSync()" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold text-xs px-3.5 py-2 rounded-lg shadow transition flex items-center space-x-1.5 shrink-0 border border-indigo-400/40">
+          <i class="fa-solid fa-arrows-rotate" id="sync-icon"></i>
+          <span id="sync-btn-text">今すぐ一括巡回</span>
+        </button>
+      </div>
+
       
       <!-- Monitored Trips Horizontal Selector -->
       <div class="mb-4">
@@ -308,131 +332,144 @@
   <script>
     const DEFAULT_DATA = {
       "generated_at": new Date().toISOString().replace("T", " ").slice(0, 19),
-      "trips": [
-        {
-          "id": "trip-tokyo-demo",
-          "management_name": "東京出張",
-          "checkin_date": "2026-10-15",
-          "stay_nights": 1,
-          "adult_num": 1,
-          "destination": "東京駅",
-          "booked_price": 12000,
-          "has_cheaper_option": true,
-          "max_saved_amount": 3100,
-          "cheaper_count": 3,
-          "total_matched": 5,
-          "filters": {
-            "smoking": "禁煙",
-            "breakfast": "指定なし",
-            "max_walk": 10,
-            "min_review": 3.8,
-            "budget_max": 16000
-          },
-          "hotels": [
-            {
-              "hotel_id": "demo_3",
-              "hotel_name": "アパホテル＆リゾート東京駅前",
-              "price": 8900,
-              "walk_minutes": 3,
-              "review_rate": 4.0,
-              "agent": "楽天トラベル",
-              "plan_name": "【素泊まり】駅チカ直結プラン・大浴場無料利用",
-              "image_url": "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=500&q=80",
-              "url": "https://travel.rakuten.co.jp/",
-              "tags": ["徒歩3分", "大浴場あり", "禁煙"],
-              "rank": 1,
-              "cheaper_than_booked": true,
-              "saved_amount": 3100
-            },
-            {
-              "hotel_id": "demo_1",
-              "hotel_name": "スーパーホテルPremier東京駅八重洲中央口",
-              "price": 9500,
-              "walk_minutes": 4,
-              "review_rate": 4.3,
-              "agent": "楽天トラベル",
-              "plan_name": "【公式限定】天然温泉付スマートSTAY（禁煙）",
-              "image_url": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=500&q=80",
-              "url": "https://travel.rakuten.co.jp/",
-              "tags": ["徒歩4分", "天然温泉", "禁煙"],
-              "rank": 2,
-              "cheaper_than_booked": true,
-              "saved_amount": 2500
-            },
-            {
-              "hotel_id": "demo_2",
-              "hotel_name": "京王プレッソイン東京駅中央通り",
-              "price": 10800,
-              "walk_minutes": 6,
-              "review_rate": 4.1,
-              "agent": "じゃらん",
-              "plan_name": "シンプルステイ・無料軽朝食サービス（禁煙シングル）",
-              "image_url": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=500&q=80",
-              "url": "https://www.jalan.net/",
-              "tags": ["徒歩6分", "軽朝食付き", "禁煙"],
-              "rank": 3,
-              "cheaper_than_booked": true,
-              "saved_amount": 1200
-            }
-          ]
-        },
-        {
-          "id": "trip-hakata-demo",
-          "management_name": "博多旅行",
-          "checkin_date": "2026-11-20",
-          "stay_nights": 1,
-          "adult_num": 1,
-          "destination": "博多駅",
-          "booked_price": null,
-          "has_cheaper_option": false,
-          "max_saved_amount": 0,
-          "cheaper_count": 0,
-          "total_matched": 5,
-          "filters": {
-            "smoking": "禁煙",
-            "breakfast": "朝食あり",
-            "max_walk": 8,
-            "min_review": 4.0,
-            "budget_max": 14000
-          },
-          "hotels": [
-            {
-              "hotel_id": "demo_h1",
-              "hotel_name": "ダイワロイネットホテル博多駅前",
-              "price": 10500,
-              "walk_minutes": 4,
-              "review_rate": 4.2,
-              "agent": "楽天トラベル",
-              "plan_name": "博多名物和洋朝食ビュッフェ付 スタンダードシングル",
-              "image_url": "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=500&q=80",
-              "url": "https://travel.rakuten.co.jp/",
-              "tags": ["徒歩4分", "朝食付き", "禁煙"],
-              "rank": 1,
-              "cheaper_than_booked": false,
-              "saved_amount": 0
-            },
-            {
-              "hotel_id": "demo_h2",
-              "hotel_name": "三井ガーデンホテル福岡祇園",
-              "price": 12800,
-              "walk_minutes": 7,
-              "review_rate": 4.4,
-              "agent": "じゃらん",
-              "plan_name": "最上階大浴場＆郷土料理ビュッフェ朝食付き",
-              "image_url": "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=500&q=80",
-              "url": "https://www.jalan.net/",
-              "tags": ["徒歩7分", "最上階大浴場", "朝食付き"],
-              "rank": 2,
-              "cheaper_than_booked": false,
-              "saved_amount": 0
-            }
-          ]
-        }
-      ]
+      "trips": []
     };
 
     let appData = DEFAULT_DATA;
     let currentTripIndex = 0;
+
+    // ==========================================
+    // GitHub Actions 遠隔起動 ＆ 進捗トラッキング
+    // ==========================================
+    const GITHUB_REPO_OWNER = "youyou7188";
+    const GITHUB_REPO_NAME = "hotel";
+
+    async function handleTriggerSync() {
+      const token = getGitHubToken();
+      if (!token) {
+        openSettingsModal();
+        showToast("遠隔巡回のためGitHubトークンを設定してください");
+        return;
+      }
+
+      const btn = document.getElementById("btn-trigger-workflow");
+      const icon = document.getElementById("sync-icon");
+      const text = document.getElementById("sync-btn-text");
+      const statusText = document.getElementById("sync-status-text");
+
+      btn.disabled = true;
+      if (icon) icon.className = "fa-solid fa-spinner fa-spin";
+      if (text) text.innerText = "巡回中...";
+      if (statusText) statusText.innerText = "GitHubで楽天＆じゃらんを全件最新巡回中...";
+
+      try {
+        const url = `https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/actions/workflows/daily_check.yml/dispatches`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": `token ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ ref: "main" })
+        });
+
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            throw new Error("GitHubトークンの認証に失敗しました。権限（repo, workflow）をご確認ください。");
+          } else {
+            throw new Error(`起動エラー (HTTP ${res.status})`);
+          }
+        }
+
+        showToast("巡回バッチが起動しました！(約15秒待ちます)");
+
+        let elapsed = 0;
+        const pollInterval = setInterval(async () => {
+          elapsed += 3;
+          if (statusText) statusText.innerText = `楽天＆じゃらんを取得中... (${elapsed}秒経過)`;
+
+          if (elapsed >= 18) {
+            try {
+              const checkRes = await fetch("data.json?t=" + Date.now());
+              if (checkRes.ok) {
+                const freshData = await checkRes.json();
+                if (freshData.generated_at !== appData.generated_at) {
+                  clearInterval(pollInterval);
+                  appData = freshData;
+                  renderDashboard();
+                  btn.disabled = false;
+                  if (icon) icon.className = "fa-solid fa-arrows-rotate";
+                  if (text) text.innerText = "今すぐ一括巡回";
+                  if (statusText) statusText.innerText = `最新更新完了 (${freshData.generated_at.slice(11, 16)})`;
+                  showToast("🎉 楽天＆じゃらんの最新価格を反映しました！");
+                  return;
+                }
+              }
+            } catch(e) {}
+          }
+
+          if (elapsed >= 40) {
+            clearInterval(pollInterval);
+            btn.disabled = false;
+            if (icon) icon.className = "fa-solid fa-arrows-rotate";
+            if (text) text.innerText = "今すぐ一括巡回";
+            if (statusText) statusText.innerText = "最新データを読み込みました";
+            loadData(true);
+          }
+        }, 3000);
+
+      } catch(err) {
+        console.error("Workflow trigger error:", err);
+        btn.disabled = false;
+        if (icon) icon.className = "fa-solid fa-arrows-rotate";
+        if (text) text.innerText = "今すぐ一括巡回";
+        if (statusText) statusText.innerText = "巡回エラーが発生しました";
+        showToast(err.message || "巡回起動エラー");
+      }
+    }
+
+
+    // ==========================================
+    // API設定（楽天アプリID ＆ GitHubトークン）
+    // ==========================================
+    function getRakutenAppId() {
+      return localStorage.getItem("rakuten_app_id") || "";
+    }
+
+    function getGitHubToken() {
+      return localStorage.getItem("github_pat") || "";
+    }
+
+    function openSettingsModal() {
+      const modal = document.getElementById("settings-modal");
+      const rInput = document.getElementById("setting-rakuten-id");
+      const gInput = document.getElementById("setting-github-token");
+      if (rInput) rInput.value = getRakutenAppId();
+      if (gInput) gInput.value = getGitHubToken();
+      if (modal) modal.classList.remove("hidden");
+    }
+
+    function closeSettingsModal() {
+      const modal = document.getElementById("settings-modal");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    function saveSettingsModal() {
+      const rInput = document.getElementById("setting-rakuten-id");
+      const gInput = document.getElementById("setting-github-token");
+      const rId = (rInput ? rInput.value : "").trim();
+      const gToken = (gInput ? gInput.value : "").trim();
+      try {
+        if (rId) localStorage.setItem("rakuten_app_id", rId);
+        if (gToken) localStorage.setItem("github_pat", gToken);
+      } catch(e) {
+        console.warn("Storage error", e);
+      }
+      closeSettingsModal();
+      showToast("設定を保存しました");
+    }
+
 
     function escapeHtml(str) {
       if (!str) return '';
@@ -790,43 +827,10 @@
       // 予約価格は全泊分の総額のため、1泊あたりの目安基準額を算出
       const bookedPerNight = (bookedPrice && nights > 0) ? Math.round(bookedPrice / nights) : null;
 
-      const mockHotels = [
-        {
-          hotel_id: "demo_1",
-          hotel_name: `スーパーホテルPremier${dest}口`,
-          price: bookedPerNight ? Math.max(3000, Math.min(bookedPerNight - 2100, 9900)) : 9900,
-          walk_minutes: Math.max(2, Math.floor(walk * 0.4)),
-          review_rate: 4.3,
-          agent: "楽天トラベル",
-          plan_name: "【スタンダードプラン】天然温泉完備・清潔な禁煙ルーム",
-          image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80",
-          url: `https://travel.rakuten.co.jp/search?f_query=${encodeURIComponent(dest)}`,
-          tags: ["徒歩4分", "天然温泉", smoking]
-        },
-        {
-          hotel_id: "demo_2",
-          hotel_name: `京王プレッソイン${dest}`,
-          price: bookedPerNight ? Math.max(3000, Math.min(bookedPerNight - 1100, 10900)) : 10900,
-          walk_minutes: Math.max(3, Math.floor(walk * 0.6)),
-          review_rate: 4.1,
-          agent: "じゃらん",
-          plan_name: "【ビジネス応援】軽朝食サービス・無料高速Wi-Fi完備",
-          image_url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=400&q=80",
-          url: `https://www.jalan.net/uw/uwp3000/uww3001.do?keyword=${encodeURIComponent(dest)}`,
-          tags: ["徒歩6分", "軽朝食付き", smoking]
-        }
-      ].map((h, i) => {
-        const total = h.price * nights;
-        const isCheaper = bookedPrice ? total < bookedPrice : false;
-        const saved = isCheaper ? (bookedPrice - total) : 0;
-        return {
-          ...h,
-          total_price: total,
-          rank: i + 1,
-          cheaper_than_booked: isCheaper,
-          saved_amount: saved
-        };
-      });
+      // 新規登録時は実データ連携または巡回対象に追加
+      const mockHotels = [];
+      const hasCheaper = false;
+      const maxSaved = 0;
 
       const hasCheaper = bookedPrice ? mockHotels.some(h => h.cheaper_than_booked) : false;
       const maxSaved = hasCheaper ? Math.max(...mockHotels.map(h => h.saved_amount)) : 0;
@@ -2374,5 +2378,73 @@
 
     window.addEventListener("DOMContentLoaded", () => loadData());
   </script>
+
+    <!-- Settings Modal (API Keys & GitHub Token) -->
+  <div id="settings-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-900 text-sm flex items-center">
+          <i class="fa-solid fa-gear text-indigo-600 mr-2"></i>設定（API ＆ 遠隔巡回連携）
+        </h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 text-sm">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- 1. GitHub 遠隔連携トークン -->
+      <div class="space-y-2">
+        <label for="setting-github-token" class="block text-xs font-bold text-slate-800">
+          GitHub 遠隔操作トークン (Personal Access Token)
+        </label>
+        <p class="text-[11px] text-slate-500 leading-relaxed">
+          スマホ画面の「今すぐ一括巡回」を押した際に、<strong>裏側のPython（楽天＋じゃらん両方）を遠隔起動</strong>するために使用します（スマホ内にのみ保存されます）。
+        </p>
+        <input type="password" id="setting-github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" 
+               class="w-full text-xs font-mono border border-slate-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        <div class="flex items-center justify-between text-[11px]">
+          <a href="https://github.com/settings/tokens/new?scopes=repo,workflow&description=HotelPriceMonitor" 
+             target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline font-bold flex items-center">
+            <i class="fa-solid fa-arrow-up-right-from-square mr-1 text-[10px]"></i>GitHubでトークンを発行する（無料・1分）
+          </a>
+          <span class="text-slate-400">※repo, workflow権限</span>
+        </div>
+      </div>
+
+      <!-- 2. 楽天アプリID -->
+      <div class="space-y-2 border-t border-slate-100 pt-3">
+        <label for="setting-rakuten-id" class="block text-xs font-bold text-slate-800">
+          楽天アプリID (applicationId)
+        </label>
+        <p class="text-[11px] text-slate-500 leading-relaxed">
+          新規出張を登録した瞬間に、楽天トラベルから最新空室を即時プレビュー取得するために使用します。
+        </p>
+        <input type="text" id="setting-rakuten-id" placeholder="例: 10xxxxxxxxxxxxxxxxx" 
+               class="w-full text-xs font-mono border border-slate-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+      </div>
+
+      <!-- GitHub直接実行への救済リンク -->
+      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-[11px] text-slate-600 space-y-1">
+        <p class="font-bold text-slate-700 flex items-center">
+          <i class="fa-solid fa-circle-question text-slate-500 mr-1.5"></i>トークンなしで今すぐ実行したい場合
+        </p>
+        <p class="text-slate-500 leading-relaxed">
+          トークンがなくても、以下のリンクからGitHubの「Run workflow」ボタンを押すだけでいつでも今すぐ巡回できます。
+        </p>
+        <a href="https://github.com/youyou7188/hotel/actions/workflows/daily_check.yml" 
+           target="_blank" rel="noopener noreferrer" class="inline-block mt-1 text-indigo-600 font-bold hover:underline">
+          ➔ GitHub Actions手動実行画面を開く
+        </a>
+      </div>
+
+      <div class="flex items-center space-x-2 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeSettingsModal()" class="flex-1 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 font-bold text-xs transition">
+          キャンセル
+        </button>
+        <button type="button" onclick="saveSettingsModal()" class="flex-1 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow transition">
+          保存する
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
