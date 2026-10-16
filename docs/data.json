@@ -1,29 +1,6 @@
 {
-  "generated_at": "2026-10-15 10:17:03",
+  "generated_at": "2026-10-16 10:02:29",
   "trips": [
-    {
-      "id": "trip-tokyo-20261015",
-      "management_name": "東京出張",
-      "checkin_date": "2026-10-15",
-      "stay_nights": 1,
-      "adult_num": 1,
-      "destination": "東京駅",
-      "target_lat": 35.6809591,
-      "target_lon": 139.7673068,
-      "booked_price": 12000,
-      "has_cheaper_option": false,
-      "max_saved_amount": 0,
-      "cheaper_count": 0,
-      "total_matched": 0,
-      "filters": {
-        "smoking": "禁煙",
-        "breakfast": "指定なし",
-        "max_walk": 10,
-        "min_review": 3.8,
-        "budget_max": 16000
-      },
-      "hotels": []
-    },
     {
       "id": "trip-hakata-20261120",
       "management_name": "博多旅行",
