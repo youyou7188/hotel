@@ -1,28 +1,4 @@
 {
-  "generated_at": "2026-11-20 12:53:56",
-  "trips": [
-    {
-      "id": "trip-hakata-20261120",
-      "management_name": "博多旅行",
-      "checkin_date": "2026-11-20",
-      "stay_nights": 1,
-      "adult_num": 1,
-      "destination": "博多駅",
-      "target_lat": 33.590355,
-      "target_lon": 130.420682,
-      "booked_price": null,
-      "has_cheaper_option": false,
-      "max_saved_amount": 0,
-      "cheaper_count": 0,
-      "total_matched": 0,
-      "filters": {
-        "smoking": "禁煙",
-        "breakfast": "朝食あり",
-        "max_walk": 8,
-        "min_review": 4.0,
-        "budget_max": 14000
-      },
-      "hotels": []
-    }
-  ]
+  "generated_at": "2026-11-21 12:49:35",
+  "trips": []
 }
